@@ -4,6 +4,7 @@ import { AuthProvider } from "@/lib/firebase/AuthProvider";
 import { AuthGate } from "@/components/auth/AuthGate";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { DevModeBanner } from "@/components/layout/DevModeBanner";
+import { GuestModeBanner } from "@/components/layout/GuestModeBanner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -39,6 +40,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <AuthProvider>
           <DevModeBanner />
+          <GuestModeBanner />
           <AuthGate>
             <AppHeader />
             {children}
