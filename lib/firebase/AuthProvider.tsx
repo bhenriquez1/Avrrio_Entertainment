@@ -17,6 +17,7 @@ import {
 } from "firebase/auth";
 import { auth, isFirebaseConfigured } from "./config";
 import { DEV_BYPASS_USER } from "@/lib/auth/devBypass";
+import { GUEST_USER, isGuestModeActive } from "@/lib/auth/guestMode";
 
 /**
  * Client-side mirror of the bypass flag for UI purposes only (show the
@@ -28,6 +29,7 @@ import { DEV_BYPASS_USER } from "@/lib/auth/devBypass";
  * protected pages/API calls will redirect/401 despite this optimistic UI.
  */
 const devBypassAuth = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === "true";
+const guestModeActive = isGuestModeActive();
 
 export type AccessStatus =
   | "not_configured"
@@ -67,12 +69,14 @@ const AuthContext = createContext<AuthContextValue>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<AccessStatus>(
-    devBypassAuth ? "allowed" : isFirebaseConfigured ? "checking" : "not_configured"
+    guestModeActive || devBypassAuth ? "allowed" : isFirebaseConfigured ? "checking" : "not_configured"
   );
-  const [role, setRole] = useState<AccessRole>(devBypassAuth ? "owner" : null);
+  const [role, setRole] = useState<AccessRole>(
+    guestModeActive ? GUEST_USER.role : devBypassAuth ? "owner" : null
+  );
 
   useEffect(() => {
-    if (devBypassAuth || !isFirebaseConfigured || !auth) {
+    if (guestModeActive || devBypassAuth || !isFirebaseConfigured || !auth) {
       return;
     }
     const activeAuth = auth;
@@ -139,10 +143,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        uid: devBypassAuth ? DEV_BYPASS_USER.uid : user?.uid ?? "",
-        email: devBypassAuth ? DEV_BYPASS_USER.email : user?.email ?? null,
+        uid: guestModeActive ? GUEST_USER.uid : devBypassAuth ? DEV_BYPASS_USER.uid : user?.uid ?? "",
+        email: guestModeActive ? GUEST_USER.email : devBypassAuth ? DEV_BYPASS_USER.email : user?.email ?? null,
         status,
-        role: devBypassAuth ? DEV_BYPASS_USER.role : role,
+        role: guestModeActive ? GUEST_USER.role : devBypassAuth ? DEV_BYPASS_USER.role : role,
         isDevBypass: devBypassAuth,
         getIdToken,
         signInWithEmail,

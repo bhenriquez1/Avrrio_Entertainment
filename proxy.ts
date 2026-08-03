@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/auth/session";
 import { isDevBypassActive } from "@/lib/auth/devBypass";
+import { isGuestModeActive } from "@/lib/auth/guestMode";
 
 /**
  * Edge-level route guard. Runs in front of every page and API route. Layers,
@@ -23,6 +24,7 @@ const SITE_USERNAME = process.env.SITE_PASSWORD_USERNAME || "purpose-pen";
 const SITE_PASSWORD = process.env.SITE_PASSWORD;
 
 const devBypassActive = isDevBypassActive();
+const guestModeActive = isGuestModeActive();
 
 const PUBLIC_PATHS = new Set([
   "/",
@@ -111,6 +113,17 @@ export async function proxy(request: NextRequest) {
   }
 
   if (devBypassActive) {
+    return withSecurityHeaders(NextResponse.next());
+  }
+
+  // Guest mode: allow all routes except /admin, which stays blocked.
+  if (guestModeActive) {
+    if (pathname.startsWith("/admin")) {
+      if (pathname.startsWith("/api/")) {
+        return withSecurityHeaders(NextResponse.json({ error: "Forbidden" }, { status: 403 }));
+      }
+      return withSecurityHeaders(NextResponse.redirect(new URL("/", request.url)));
+    }
     return withSecurityHeaders(NextResponse.next());
   }
 
