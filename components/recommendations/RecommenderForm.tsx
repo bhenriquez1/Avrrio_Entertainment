@@ -16,6 +16,8 @@ const RECOMMENDER_TYPES: { value: RecommenderType; label: string }[] = [
   { value: "professor", label: "Professor / Faculty" },
   { value: "employer", label: "Employer" },
   { value: "research_mentor", label: "Research Mentor" },
+  { value: "volunteer_supervisor", label: "Volunteer Supervisor" },
+  { value: "healthcare_professional", label: "Healthcare Professional" },
   { value: "other", label: "Other" },
 ];
 

@@ -1,12 +1,23 @@
 import {
   ATTRIBUTE_LABELS,
+  EXPERIENCE_CATEGORY_LABELS,
   LETTER_TYPE_LABELS,
+  PERSONAL_STATEMENT_THEME_LABELS,
+  RECOMMENDATION_STRENGTH_LABELS,
   PERSPECTIVE_QUESTIONS,
   type ApplicantDraftAnswers,
   type ApplicantProfile,
+  type CoreAttribute,
   type EmailTone,
+  type ExperienceCategory,
   type GuidedLetterAnswers,
   type LetterType,
+  type PersonalStatementExperience,
+  type PersonalStatementOutline,
+  type PersonalStatementQualityEntry,
+  type PersonalStatementTheme,
+  type PersonalStatementVoice,
+  type RecommendationStrength,
   type RecommenderType,
   type Recommender,
   type RequestEmailType,
@@ -328,6 +339,209 @@ export function buildLetterAnalysisPrompt(letterText: string) {
   ].join(" ");
 
   const prompt = `Analyze this recommendation letter:\n\n${letterText}`;
+
+  return { system, prompt };
+}
+
+export interface GuidedPersonalStatementInput {
+  voice: PersonalStatementVoice;
+  qualities: PersonalStatementQualityEntry[];
+  experiences: PersonalStatementExperience[];
+  centralTheme: PersonalStatementTheme;
+  outline?: PersonalStatementOutline;
+  applicantName?: string;
+  programType?: string;
+}
+
+function formatPersonalStatementVoice(voice: PersonalStatementVoice): string {
+  return [
+    `Why this profession: ${voice.whyThisProfession}`,
+    `Most influential experience: ${voice.mostInfluentialExperience}`,
+    `What kind of professional: ${voice.whatKindOfProfessional}`,
+    `What the committee should know: ${voice.whatCommitteeShouldKnow}`,
+  ].join("\n");
+}
+
+function formatPersonalStatementExperiences(experiences: PersonalStatementExperience[]): string {
+  if (!experiences.length) return "(no experiences provided)";
+  return experiences
+    .map((exp) => {
+      const lines = [
+        `Category: ${EXPERIENCE_CATEGORY_LABELS[exp.category as ExperienceCategory] ?? exp.category}`,
+        `What happened: ${exp.whatHappened}`,
+        `My role: ${exp.myRole}`,
+        exp.thoughtFeeling ? `Thoughts/feelings: ${exp.thoughtFeeling}` : "",
+        exp.whatILearned ? `What I learned: ${exp.whatILearned}` : "",
+        exp.howItChangedMe ? `How it changed me: ${exp.howItChangedMe}` : "",
+        exp.howItInfluencedGoal ? `How it influenced my goal: ${exp.howItInfluencedGoal}` : "",
+      ].filter(Boolean);
+      return lines.join("\n");
+    })
+    .join("\n\n---\n\n");
+}
+
+function formatPersonalStatementQualities(qualities: PersonalStatementQualityEntry[]): string {
+  if (!qualities.length) return "(no qualities provided)";
+  return qualities
+    .map((q) => {
+      const label = ATTRIBUTE_LABELS[q.attribute as CoreAttribute] ?? q.attribute;
+      return `${label}: ${q.supportingExperience}`;
+    })
+    .join("\n");
+}
+
+export function buildPersonalStatementOutlinePrompt(input: GuidedPersonalStatementInput) {
+  const system = [
+    "You are an admissions essay coach helping an applicant build a personal statement outline.",
+    "Generate a concrete, story-driven outline based only on the applicant's provided information.",
+    "Each outline section should reference specific experiences or qualities the applicant mentioned.",
+    "Return only the outline with short descriptions for each section — no full paragraphs yet.",
+  ].join(" ");
+
+  const prompt = [
+    input.applicantName ? `Applicant: ${input.applicantName}` : "",
+    input.programType ? `Applying to: ${input.programType}` : "",
+    `Central theme: ${PERSONAL_STATEMENT_THEME_LABELS[input.centralTheme]}`,
+    "",
+    "=== Applicant's voice and motivation ===",
+    formatPersonalStatementVoice(input.voice),
+    "",
+    "=== Qualities with supporting evidence ===",
+    formatPersonalStatementQualities(input.qualities),
+    "",
+    "=== Experience bank ===",
+    formatPersonalStatementExperiences(input.experiences),
+    "",
+    "Generate an outline with these sections: Opening Story, Core Motivation, Development Through Experiences, Growth and Self-Awareness, Why This Profession, Future Contribution, Conclusion.",
+    "For each section, write 1-2 sentences describing what specific experience or point should anchor that section.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return { system, prompt };
+}
+
+export type PersonalStatementRefineAction =
+  | "improve_grammar"
+  | "more_reflective"
+  | "add_specific_detail"
+  | "reduce_repetition"
+  | "strengthen_opening"
+  | "strengthen_conclusion"
+  | "check_authenticity";
+
+export function buildGuidedPersonalStatementPrompt(input: GuidedPersonalStatementInput) {
+  const system = [
+    "You are an admissions essay coach drafting a personal statement from an applicant's detailed self-reflection.",
+    "Write in the applicant's authentic voice: genuine, specific, and deeply personal — not generic admissions language.",
+    "Use only the experiences, qualities, and reflections the applicant provided. Do not invent facts or experiences.",
+    "The essay should feel like a real person wrote it, not a template.",
+  ].join(" ");
+
+  const outlineSection = input.outline
+    ? [
+        "=== Approved outline to follow ===",
+        `Opening: ${input.outline.openingStory}`,
+        `Motivation: ${input.outline.motivation}`,
+        `Development: ${input.outline.development}`,
+        `Growth: ${input.outline.growth}`,
+        `Why this profession: ${input.outline.whyThisProfession}`,
+        `Future contribution: ${input.outline.futureContribution}`,
+        `Conclusion: ${input.outline.conclusion}`,
+      ].join("\n")
+    : "";
+
+  const prompt = [
+    input.applicantName ? `Applicant: ${input.applicantName}` : "",
+    input.programType ? `Applying to: ${input.programType}` : "",
+    `Central theme: ${PERSONAL_STATEMENT_THEME_LABELS[input.centralTheme]}`,
+    "",
+    "=== Applicant's voice — in their own words ===",
+    formatPersonalStatementVoice(input.voice),
+    "",
+    "=== Core qualities with real evidence ===",
+    formatPersonalStatementQualities(input.qualities),
+    "",
+    "=== Experience bank ===",
+    formatPersonalStatementExperiences(input.experiences),
+    outlineSection,
+    "",
+    "Write a complete, compelling personal statement (approximately 600-800 words) that sounds authentically human.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return { system, prompt };
+}
+
+export function buildPersonalStatementRefinePrompt(
+  content: string,
+  action: PersonalStatementRefineAction
+) {
+  const instructions: Record<PersonalStatementRefineAction, string> = {
+    improve_grammar:
+      "Fix grammar, punctuation, and sentence flow while preserving the applicant's authentic voice and every specific detail.",
+    more_reflective:
+      "Make the essay more introspective and emotionally honest. Draw out deeper reflection about what the experiences meant to the applicant.",
+    add_specific_detail:
+      "Find vague or general statements and rewrite them to be more specific and concrete using only details already present in the essay.",
+    reduce_repetition:
+      "Identify repeated ideas, phrases, or themes and consolidate them without losing any important content.",
+    strengthen_opening:
+      "Rewrite the opening paragraph to be more compelling and story-driven. Use a specific scene or moment as the hook.",
+    strengthen_conclusion:
+      "Rewrite the conclusion to be more powerful and forward-looking. Connect the applicant's past to their professional future.",
+    check_authenticity:
+      "Review the essay for generic admissions language and clichés. Replace them with specific, genuine language that only this applicant could have written.",
+  };
+
+  const system = [
+    "You are editing an applicant's personal statement draft.",
+    "Preserve the applicant's authentic voice and all specific personal details already in the essay.",
+    instructions[action],
+  ].join(" ");
+
+  const prompt = `=== Current personal statement ===\n${content}\n\nReturn the complete revised essay only, with no extra commentary.`;
+
+  return { system, prompt };
+}
+
+export function buildPersonalStatementComparisonPrompt(
+  currentDraft: string,
+  previousStatement: string
+) {
+  const system = [
+    "You are an admissions consultant comparing a reapplicant's current personal statement draft against a previous cycle's statement.",
+    'Respond with strict JSON only: {"repeatedStories": string[], "genericLanguage": string[], "missingGrowth": string[], "newExperiencesNotUsed": string[], "weakExplanations": string[], "improvements": string[], "overallAssessment": string}.',
+    "Do not include any text outside the JSON object.",
+  ].join(" ");
+
+  const prompt = [
+    "=== Previous personal statement ===",
+    previousStatement,
+    "",
+    "=== Current draft ===",
+    currentDraft,
+    "",
+    "Identify: repeated stories, generic language, missing evidence of growth, new experiences not yet woven in, weak explanations, and specific improvements.",
+  ].join("\n");
+
+  return { system, prompt };
+}
+
+export function buildLetterStrengthPrompt(
+  letterContent: string,
+  strength: RecommendationStrength
+) {
+  const label = RECOMMENDATION_STRENGTH_LABELS[strength];
+  const system = [
+    "You are editing a letter of recommendation to calibrate its strength level.",
+    `Target strength: ${label}.`,
+    "Supportive means solid positive praise. Strongly Supportive means clear advocacy. Enthusiastic means genuine excitement and strong endorsement. Highest Recommendation means the recommender places the applicant among the very best they have ever worked with.",
+    "Adjust tone and language to match the target strength without inventing new facts.",
+  ].join(" ");
+
+  const prompt = `=== Current letter ===\n${letterContent}\n\nRevise the letter to reflect a "${label}" level of support. Return only the complete revised letter.`;
 
   return { system, prompt };
 }

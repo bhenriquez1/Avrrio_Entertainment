@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
 import { AINotConfiguredError, callClaude } from "@/lib/ai/anthropic";
-import { buildRefineLetterPrompt, type RefineAction } from "@/lib/ai/prompts";
+import {
+  buildLetterStrengthPrompt,
+  buildRefineLetterPrompt,
+  type RefineAction,
+} from "@/lib/ai/prompts";
 import { AdminNotConfiguredError } from "@/lib/firebase/admin";
 import { requireAuthedUser, UnauthorizedError, ForbiddenError } from "@/lib/auth/verifyRequest";
 import { logAuditEvent } from "@/lib/audit/server";
+import type { RecommendationStrength } from "@/types/recommendation";
 
 const REFINE_ACTIONS: RefineAction[] = ["professional", "shorten", "strengthen", "add_examples"];
 
 interface RefineLetterRequest {
   content: string;
-  action: RefineAction;
+  action: RefineAction | "strength";
+  strength?: RecommendationStrength;
 }
 
 export async function POST(request: Request) {
@@ -20,11 +26,22 @@ export async function POST(request: Request) {
     if (!body.content?.trim()) {
       return NextResponse.json({ error: "Letter content is required." }, { status: 400 });
     }
-    if (!REFINE_ACTIONS.includes(body.action)) {
-      return NextResponse.json({ error: "Invalid refine action." }, { status: 400 });
+
+    let system: string;
+    let prompt: string;
+
+    if (body.action === "strength") {
+      if (!body.strength) {
+        return NextResponse.json({ error: "Strength level is required." }, { status: 400 });
+      }
+      ({ system, prompt } = buildLetterStrengthPrompt(body.content, body.strength));
+    } else {
+      if (!REFINE_ACTIONS.includes(body.action)) {
+        return NextResponse.json({ error: "Invalid refine action." }, { status: 400 });
+      }
+      ({ system, prompt } = buildRefineLetterPrompt(body.content, body.action));
     }
 
-    const { system, prompt } = buildRefineLetterPrompt(body.content, body.action);
     const content = await callClaude({ system, prompt, maxTokens: 2000 });
 
     await logAuditEvent({
@@ -43,7 +60,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 403 });
     }
     if (error instanceof AINotConfiguredError || error instanceof AdminNotConfiguredError) {
-      return NextResponse.json({ error: error.message }, { status: error instanceof AINotConfiguredError ? 501 : 503 });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error instanceof AINotConfiguredError ? 501 : 503 }
+      );
     }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
