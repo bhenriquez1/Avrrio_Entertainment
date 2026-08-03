@@ -3,6 +3,8 @@ export type RecommenderType =
   | "professor"
   | "employer"
   | "research_mentor"
+  | "volunteer_supervisor"
+  | "healthcare_professional"
   | "other";
 
 export type RecommendationStatus =
@@ -71,7 +73,12 @@ export type CoreAttribute =
   | "empathy"
   | "professionalism"
   | "coachability"
-  | "attention_to_detail";
+  | "attention_to_detail"
+  | "initiative"
+  | "patience"
+  | "responsibility"
+  | "cultural_awareness"
+  | "service_orientation";
 
 export const CORE_ATTRIBUTES: CoreAttribute[] = [
   "compassion",
@@ -90,6 +97,11 @@ export const CORE_ATTRIBUTES: CoreAttribute[] = [
   "professionalism",
   "coachability",
   "attention_to_detail",
+  "initiative",
+  "patience",
+  "responsibility",
+  "cultural_awareness",
+  "service_orientation",
 ];
 
 export const ATTRIBUTE_LABELS: Record<CoreAttribute, string> = {
@@ -109,17 +121,20 @@ export const ATTRIBUTE_LABELS: Record<CoreAttribute, string> = {
   professionalism: "Professionalism",
   coachability: "Coachability",
   attention_to_detail: "Attention to Detail",
+  initiative: "Initiative",
+  patience: "Patience",
+  responsibility: "Responsibility",
+  cultural_awareness: "Cultural Awareness",
+  service_orientation: "Service Orientation",
 };
 
 export interface AttributeExample {
   attribute: CoreAttribute;
-  /** What happened */
   situation: string;
-  /** What the applicant did */
   action: string;
-  /** What the recommender observed */
   observation: string;
-  /** Why it matters */
+  whoAffected?: string;
+  result?: string;
   significance: string;
 }
 
@@ -164,8 +179,143 @@ export const PERSPECTIVE_QUESTIONS: Record<RecommenderType, { id: string; questi
     { id: "writing_research", question: "Research and writing ability" },
     { id: "growth_over_time", question: "Growth over time in the lab" },
   ],
+  volunteer_supervisor: [
+    { id: "service_commitment", question: "Commitment to service" },
+    { id: "reliability_volunteer", question: "Reliability and attendance" },
+    { id: "interpersonal_skills", question: "Interpersonal skills with those they served" },
+    { id: "initiative_volunteer", question: "Initiative and self-direction" },
+    { id: "cultural_sensitivity", question: "Cultural sensitivity and awareness" },
+    { id: "growth_volunteer", question: "Personal and professional growth" },
+  ],
+  healthcare_professional: [
+    { id: "patient_care", question: "Quality of patient care and bedside manner" },
+    { id: "clinical_competence", question: "Clinical competence and preparedness" },
+    { id: "professionalism_hc", question: "Professionalism in a clinical setting" },
+    { id: "teamwork_hc", question: "Teamwork with healthcare staff" },
+    { id: "compassion_hc", question: "Compassion toward patients" },
+    { id: "growth_hc", question: "Growth and learning over time" },
+  ],
   other: [],
 };
+
+export type RecommendationStrength =
+  | "supportive"
+  | "strongly_supportive"
+  | "enthusiastic"
+  | "highest";
+
+export const RECOMMENDATION_STRENGTH_LABELS: Record<RecommendationStrength, string> = {
+  supportive: "Supportive",
+  strongly_supportive: "Strongly Supportive",
+  enthusiastic: "Enthusiastic",
+  highest: "Highest Recommendation",
+};
+
+export type DraftLetterStatus =
+  | "information_incomplete"
+  | "draft_in_progress"
+  | "drafted_by_applicant"
+  | "pending_recommender_review"
+  | "recommender_edited"
+  | "approved_by_recommender"
+  | "ready_for_submission";
+
+export const DRAFT_LETTER_STATUS_LABELS: Record<DraftLetterStatus, string> = {
+  information_incomplete: "Information Incomplete",
+  draft_in_progress: "Draft in Progress",
+  drafted_by_applicant: "Drafted by Applicant",
+  pending_recommender_review: "Pending Recommender Review",
+  recommender_edited: "Recommender Edited",
+  approved_by_recommender: "Approved by Recommender",
+  ready_for_submission: "Ready for Submission",
+};
+
+export type PersonalStatementTheme =
+  | "service"
+  | "resilience"
+  | "patient_centered_care"
+  | "scientific_curiosity"
+  | "advocacy"
+  | "access_to_care"
+  | "personal_growth"
+  | "cultural_understanding"
+  | "leadership_through_service";
+
+export const PERSONAL_STATEMENT_THEME_LABELS: Record<PersonalStatementTheme, string> = {
+  service: "Service",
+  resilience: "Resilience",
+  patient_centered_care: "Patient-Centered Care",
+  scientific_curiosity: "Scientific Curiosity",
+  advocacy: "Advocacy",
+  access_to_care: "Access to Care",
+  personal_growth: "Personal Growth",
+  cultural_understanding: "Cultural Understanding",
+  leadership_through_service: "Leadership Through Service",
+};
+
+export type ExperienceCategory =
+  | "clinical"
+  | "shadowing"
+  | "employment"
+  | "volunteer"
+  | "research"
+  | "leadership"
+  | "personal_challenge"
+  | "cultural"
+  | "turning_point"
+  | "failure_recovery"
+  | "mentorship"
+  | "patient_interaction"
+  | "other";
+
+export const EXPERIENCE_CATEGORY_LABELS: Record<ExperienceCategory, string> = {
+  clinical: "Clinical Experience",
+  shadowing: "Shadowing",
+  employment: "Employment",
+  volunteer: "Volunteer Work",
+  research: "Research",
+  leadership: "Leadership",
+  personal_challenge: "Personal Challenge",
+  cultural: "Cultural Experience",
+  turning_point: "Turning Point",
+  failure_recovery: "Failure & Recovery",
+  mentorship: "Mentorship",
+  patient_interaction: "Patient Interaction",
+  other: "Other",
+};
+
+export interface PersonalStatementExperience {
+  id: string;
+  category: ExperienceCategory;
+  whatHappened: string;
+  myRole: string;
+  thoughtFeeling: string;
+  whatILearned: string;
+  howItChangedMe: string;
+  howItInfluencedGoal: string;
+}
+
+export interface PersonalStatementVoice {
+  whyThisProfession: string;
+  mostInfluentialExperience: string;
+  whatKindOfProfessional: string;
+  whatCommitteeShouldKnow: string;
+}
+
+export interface PersonalStatementOutline {
+  openingStory: string;
+  motivation: string;
+  development: string;
+  growth: string;
+  whyThisProfession: string;
+  futureContribution: string;
+  conclusion: string;
+}
+
+export interface PersonalStatementQualityEntry {
+  attribute: CoreAttribute;
+  supportingExperience: string;
+}
 
 export type VoiceProfileType =
   | "formal_professor"

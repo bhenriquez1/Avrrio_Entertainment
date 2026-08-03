@@ -125,7 +125,9 @@ export async function proxy(request: NextRequest) {
     if (pathname.startsWith("/api/")) {
       return withSecurityHeaders(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }
-    return withSecurityHeaders(NextResponse.redirect(new URL("/", request.url)));
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("redirect", pathname);
+    return withSecurityHeaders(NextResponse.redirect(loginUrl));
   }
 
   if (pathname.startsWith("/admin") && session.role !== "owner") {

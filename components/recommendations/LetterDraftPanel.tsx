@@ -7,15 +7,18 @@ import { FieldGroup, Input, Select, Textarea } from "@/components/ui/Field";
 import { useAuth } from "@/lib/firebase/AuthProvider";
 import { saveLetterDraft } from "@/lib/recommendations/repository";
 import { logClientEvent } from "@/lib/audit/client";
+import { downloadMarkdown } from "@/lib/recommendations/documents";
 import {
   LETTER_TYPE_LABELS,
   PERSPECTIVE_QUESTIONS,
+  RECOMMENDATION_STRENGTH_LABELS,
   type ApplicantDraftAnswers,
   type ApplicantProfile,
   type DraftApprovalStatus,
   type DraftAuthor,
   type GuidedLetterAnswers,
   type LetterType,
+  type RecommendationStrength,
   type Recommender,
 } from "@/types/recommendation";
 
@@ -77,6 +80,7 @@ export function LetterDraftPanel({
   applicantProfile: ApplicantProfile;
 }) {
   const [letterType, setLetterType] = useState<LetterType>("dental_school");
+  const [strength, setStrength] = useState<RecommendationStrength>("strongly_supportive");
   const [content, setContent] = useState("");
   const [voiceMatchScore, setVoiceMatchScore] = useState<number | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -258,17 +262,62 @@ export function LetterDraftPanel({
     }
   };
 
+  const handleAdjustStrength = async (targetStrength: RecommendationStrength) => {
+    const label = `strength_${targetStrength}`;
+    setRefining(label);
+    setError(null);
+    setSavedMessage(null);
+    try {
+      const idToken = await getIdToken();
+      const response = await fetch("/api/recommendations/refine-letter", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ content, action: "strength", strength: targetStrength }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Failed to adjust strength");
+      setContent(data.content);
+      setStrength(targetStrength);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to adjust strength");
+    } finally {
+      setRefining(null);
+    }
+  };
+
+  const handleExport = () => {
+    const filename = `${recommender.name.replace(/\s+/g, "-").toLowerCase() || "letter"}-recommendation.md`;
+    downloadMarkdown(filename, `# Letter of Recommendation\n\nFor: ${applicantProfile.applicantName || "Applicant"}\nFrom: ${recommender.name}, ${recommender.role}\n\n${content}`);
+    void logClientEvent(getIdToken, "export_letter_draft", { recommenderId: recommender.id });
+  };
+
   return (
     <div className="space-y-4">
-      <FieldGroup label="Letter type">
-        <Select value={letterType} onChange={(e) => setLetterType(e.target.value as LetterType)}>
-          {LETTER_TYPES.map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </Select>
-      </FieldGroup>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <FieldGroup label="Letter type">
+          <Select value={letterType} onChange={(e) => setLetterType(e.target.value as LetterType)}>
+            {LETTER_TYPES.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </Select>
+        </FieldGroup>
+        <FieldGroup label="Recommendation strength">
+          <Select
+            value={strength}
+            onChange={(e) => setStrength(e.target.value as RecommendationStrength)}
+          >
+            {(Object.entries(RECOMMENDATION_STRENGTH_LABELS) as [RecommendationStrength, string][]).map(
+              ([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              )
+            )}
+          </Select>
+        </FieldGroup>
+      </div>
 
       {error && <ErrorMessage message={error} />}
 
@@ -659,6 +708,13 @@ export function LetterDraftPanel({
             >
               Sharpen Specifics
             </Button>
+            <Button
+              onClick={() => handleAdjustStrength(strength)}
+              loading={refining === `strength_${strength}`}
+              variant="secondary"
+            >
+              Adjust to {RECOMMENDATION_STRENGTH_LABELS[strength]}
+            </Button>
             {generatedBy === "applicant" && (
               <>
                 <Button onClick={handleAddReviewHeader} variant="secondary">
@@ -671,9 +727,12 @@ export function LetterDraftPanel({
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Button onClick={handleSave} loading={saving}>
               Save Draft
+            </Button>
+            <Button onClick={handleExport} variant="ghost">
+              Export Final Draft
             </Button>
             {savedMessage && (
               <span className="text-sm text-emerald-600 dark:text-emerald-400">{savedMessage}</span>

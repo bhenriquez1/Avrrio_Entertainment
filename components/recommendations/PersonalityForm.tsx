@@ -19,6 +19,8 @@ const emptyExample = (attribute: CoreAttribute): AttributeExample => ({
   situation: "",
   action: "",
   observation: "",
+  whoAffected: "",
+  result: "",
   significance: "",
 });
 
@@ -145,11 +147,27 @@ export function PersonalityForm({
                     }
                   />
                 </FieldGroup>
-                <FieldGroup label="What did you observe?">
+                <FieldGroup label="What did you personally observe?">
                   <Input
                     value={example.observation}
                     onChange={(e) =>
                       updateExample(example.attribute, "observation", e.target.value)
+                    }
+                  />
+                </FieldGroup>
+                <FieldGroup label="Who was affected?">
+                  <Input
+                    value={example.whoAffected ?? ""}
+                    onChange={(e) =>
+                      updateExample(example.attribute, "whoAffected", e.target.value)
+                    }
+                  />
+                </FieldGroup>
+                <FieldGroup label="What was the result?">
+                  <Input
+                    value={example.result ?? ""}
+                    onChange={(e) =>
+                      updateExample(example.attribute, "result", e.target.value)
                     }
                   />
                 </FieldGroup>
