@@ -73,12 +73,20 @@ export default function StudioPage() {
             <h1 className="text-2xl font-bold text-zinc-50">Productions</h1>
             <p className="mt-1 text-sm text-zinc-400">Your active and archived production projects.</p>
           </div>
-          <button
-            onClick={() => setShowNew(true)}
-            className="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-white transition-colors"
-          >
-            + New Production
-          </button>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/studio/brand"
+              className="rounded-lg border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 transition-colors"
+            >
+              Studio Brand
+            </Link>
+            <button
+              onClick={() => setShowNew(true)}
+              className="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-white transition-colors"
+            >
+              + New Production
+            </button>
+          </div>
         </div>
 
         {showNew && (
