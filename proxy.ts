@@ -20,7 +20,7 @@ import { isGuestModeActive } from "@/lib/auth/guestMode";
  * Named proxy.ts (not middleware.ts) per the Next.js 16 convention this
  * project uses.
  */
-const SITE_USERNAME = process.env.SITE_PASSWORD_USERNAME || "purpose-pen";
+const SITE_USERNAME = process.env.SITE_PASSWORD_USERNAME || "avrrio";
 const SITE_PASSWORD = process.env.SITE_PASSWORD;
 
 const devBypassActive = isDevBypassActive();
@@ -31,7 +31,6 @@ const PUBLIC_PATHS = new Set([
   "/login",
   "/signup",
   "/reset-password",
-  "/terms",
   "/privacy",
   "/setup",
 ]);
@@ -41,11 +40,8 @@ const PUBLIC_PATHS = new Set([
 const OPEN_API_PATHS = new Set(["/api/auth/access", "/api/auth/logout"]);
 
 const PROTECTED_PREFIXES = [
-  "/dashboard",
-  "/application-management",
-  "/essay-studio",
-  "/letter-builder",
-  "/reapplicant-archive",
+  "/studio",
+  "/production",
   "/admin",
   "/api",
 ];
@@ -78,7 +74,7 @@ function unauthorized() {
   return withSecurityHeaders(
     new NextResponse("Authentication required.", {
       status: 401,
-      headers: { "WWW-Authenticate": 'Basic realm="Purpose Pen", charset="UTF-8"' },
+      headers: { "WWW-Authenticate": 'Basic realm="Avrrio Entertainment", charset="UTF-8"' },
     })
   );
 }
