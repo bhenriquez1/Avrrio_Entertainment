@@ -19,7 +19,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
             Setup Required
           </h1>
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            Purpose Pen requires Firebase Authentication to be configured before it can be
+            Avrrio Entertainment requires Firebase Authentication to be configured before it can be
             accessed. No public or anonymous access is available. Set the{" "}
             <code>NEXT_PUBLIC_FIREBASE_*</code> environment variables to continue.
           </p>
@@ -53,7 +53,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
           </h1>
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
             {email ? `${email} is not yet approved for beta access.` : "Your account is not yet approved."}{" "}
-            Reach out to the Purpose Pen team if you believe this is a mistake.
+            Reach out to the Avrrio Entertainment team if you believe this is a mistake.
           </p>
           <Button variant="secondary" className="mt-4" onClick={() => signOutUser()}>
             Sign Out

@@ -6,7 +6,7 @@
  */
 export const DEV_BYPASS_USER = {
   uid: "dev-user",
-  email: "developer@purposepen.local",
+  email: "developer@avrrio.local",
   role: "owner" as const,
 };
 

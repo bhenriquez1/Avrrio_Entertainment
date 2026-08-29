@@ -33,9 +33,9 @@ export function SignInForm() {
 
   return (
     <div className="mx-auto max-w-sm py-24">
-      <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Purpose Pen</h1>
+      <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Avrrio Entertainment</h1>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-        {mode === "sign_in" ? "Sign in to continue." : "Create an account to request beta access."}
+        {mode === "sign_in" ? "Sign in to continue." : "Create an account to request access."}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
