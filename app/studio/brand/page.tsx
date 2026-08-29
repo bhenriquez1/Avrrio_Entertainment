@@ -118,8 +118,8 @@ export default function StudioBrandPage() {
           {[
             { time: "00:00", label: "Avrrio Entertainment Ident", dim: false },
             { time: "00:10", label: "Cold Open", dim: false },
-            { time: "", label: "↓  Castillo title sequence", dim: true },
-            { time: "", label: "↓  Episode", dim: true },
+            { time: "", label: "↓  Series title sequence", dim: true },
+            { time: "", label: "↓  Episode / Film", dim: true },
             { time: "", label: "↓  End credits", dim: true },
             { time: "", label: "↓  Avrrio Entertainment closing mark", dim: false },
           ].map((row, i) => (
@@ -130,7 +130,7 @@ export default function StudioBrandPage() {
           ))}
         </div>
         <p className="mt-2 text-xs text-zinc-600">
-          The Avrrio ident and Castillo title sequence are separate assets — the ident belongs to the studio; the title sequence belongs to this series.
+          The Avrrio ident and the series title sequence are separate assets — the ident belongs to the studio; the title sequence belongs to each production.
         </p>
       </section>
 

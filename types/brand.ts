@@ -1,12 +1,12 @@
 export type AssetStatus = "concept" | "in-development" | "approved" | "final";
 export type AssetFormat = "4k" | "hdr" | "youtube" | "web" | "audio";
-export type IdentVariantType = "standard" | "dark" | "holiday" | "castillo";
+export type IdentVariantType = "standard" | "dark" | "holiday" | "series";
 
 export const IDENT_VARIANT_LABELS: Record<IdentVariantType, string> = {
   standard: "Standard",
   dark: "Dark",
   holiday: "Holiday / Special",
-  castillo: "Castillo Variant",
+  series: "Series Variant",
 };
 
 export const ASSET_STATUS_LABELS: Record<AssetStatus, string> = {
