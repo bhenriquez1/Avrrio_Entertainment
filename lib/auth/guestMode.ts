@@ -2,7 +2,7 @@ import type { AccessRole } from "@/lib/auth/access";
 
 export const GUEST_USER = {
   uid: "guest-user",
-  email: "guest@purposepen.local",
+  email: "guest@avrrio.local",
   displayName: "Guest Tester",
   role: "member" as AccessRole,
 };
