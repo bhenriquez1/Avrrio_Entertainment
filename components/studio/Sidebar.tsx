@@ -18,6 +18,7 @@ const NAV = [
   { label: "Voices", href: "/voices", group: "Production" },
   { label: "Locations", href: "/locations", group: "Production" },
   { label: "AI Studio", href: "/ai-studio", group: "Intelligence" },
+  { label: "Creative Room", href: "/creative-room", group: "Intelligence" },
   { label: "Production", href: "/production-queue", group: "Intelligence" },
   { label: "QA", href: "/qa", group: "Intelligence" },
 ];

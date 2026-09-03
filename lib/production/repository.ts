@@ -2,6 +2,7 @@ import { listItems, getItem, saveItem, deleteItem } from "./storage";
 import type { Production } from "@/types/production";
 import type { CanonRecord } from "@/types/canon";
 import type { Season, Episode } from "@/types/episode";
+import type { CreativeMessage } from "@/types/ai";
 
 function nowIso() { return new Date().toISOString(); }
 function newId() {
@@ -77,4 +78,24 @@ export async function saveEpisode(uid: string, productionId: string, seasonId: s
   const ep: Episode = { ...data, id: data.id ?? newId(), productionId, seasonId, acts: data.acts ?? [], canonDependencies: data.canonDependencies ?? [], createdAt: now, updatedAt: now };
   await saveItem(uid, `episodes-${seasonId}`, ep);
   return ep;
+}
+
+// Creative Room history
+export async function listCreativeMessages(uid: string, productionId: string): Promise<CreativeMessage[]> {
+  return listItems<CreativeMessage>(uid, `creative-room-${productionId}`);
+}
+
+export async function saveCreativeMessage(
+  uid: string,
+  productionId: string,
+  data: Omit<CreativeMessage, "id" | "productionId" | "createdAt"> & { id?: string; createdAt?: string }
+): Promise<CreativeMessage> {
+  const message: CreativeMessage = {
+    ...data,
+    id: data.id ?? newId(),
+    productionId,
+    createdAt: data.createdAt ?? nowIso(),
+  };
+  await saveItem(uid, `creative-room-${productionId}`, message);
+  return message;
 }

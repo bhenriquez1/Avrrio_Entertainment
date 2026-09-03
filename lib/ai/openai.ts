@@ -21,7 +21,7 @@ export async function callOpenAI({ system, prompt, maxTokens = 2000, jsonMode = 
 }): Promise<string> {
   const client = getClient();
   const response = await client.chat.completions.create({
-    model: "gpt-4o",
+    model: process.env.OPENAI_MODEL ?? "gpt-4o",
     max_tokens: maxTokens,
     response_format: jsonMode ? { type: "json_object" } : undefined,
     messages: [

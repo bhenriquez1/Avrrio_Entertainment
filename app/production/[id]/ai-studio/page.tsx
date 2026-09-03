@@ -5,10 +5,10 @@ import { use, useEffect, useState } from "react";
 const PROVIDERS = [
   { id: "openai", label: "OpenAI", role: "Creative reasoning & canon extraction", department: "Executive Producer", status: "checking" },
   { id: "claude", label: "Claude", role: "Production direction & continuity review", department: "Production Director", status: "checking" },
-  { label: "Runway", role: "AI video generation", department: "Video Department", status: "not_configured" },
-  { label: "ElevenLabs", role: "Voice synthesis", department: "Voice Department", status: "not_configured" },
-  { label: "Blender Worker", role: "3D rendering pipeline", department: "3D Department", status: "not_configured" },
-  { label: "Heyomi", role: "Multimodal production", department: "Multimodal Provider", status: "future" },
+  { id: "runway", label: "Runway", role: "AI video generation", department: "Video Department", status: "checking" },
+  { id: "kling", label: "Kling", role: "AI video generation", department: "Video Department", status: "checking" },
+  { id: "elevenlabs", label: "ElevenLabs", role: "Voice synthesis", department: "Voice Department", status: "checking" },
+  { id: "blender", label: "Blender Worker", role: "3D rendering pipeline", department: "3D Department", status: "checking" },
 ];
 
 const STATUS_DOT: Record<string, string> = {
@@ -53,13 +53,11 @@ export default function AIStudioPage({ params }: { params: Promise<{ id: string 
       <p className="text-sm text-zinc-400 mb-8">Connected production agents and provider status.</p>
       <div className="space-y-1">
         {PROVIDERS.map((p) => {
-          const status = p.id === "openai" || p.id === "claude"
-            ? providerStatus === null
-              ? "checking"
-              : providerStatus[p.id]
-                ? "ready"
-                : "check_env"
-            : p.status;
+          const status = providerStatus === null
+            ? "checking"
+            : providerStatus[p.id]
+              ? "ready"
+              : "check_env";
           return (
           <div key={p.label} className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 px-5 py-4">
             <div>
@@ -80,6 +78,10 @@ export default function AIStudioPage({ params }: { params: Promise<{ id: string 
         <div className="space-y-1 font-mono text-xs text-zinc-400">
           <p>OPENAI_API_KEY=<span className="text-zinc-600">sk-…</span></p>
           <p>ANTHROPIC_API_KEY=<span className="text-zinc-600">sk-ant-…</span></p>
+          <p>RUNWAY_API_KEY=<span className="text-zinc-600">key_…</span></p>
+          <p>KLING_ACCESS_KEY / KLING_SECRET_KEY=<span className="text-zinc-600">••••</span></p>
+          <p>ELEVENLABS_API_KEY=<span className="text-zinc-600">••••</span></p>
+          <p>BLENDER_WORKER_URL / BLENDER_WORKER_TOKEN=<span className="text-zinc-600">••••</span></p>
         </div>
         <p className="mt-3 text-xs text-zinc-600">API keys are server-side only — never exposed to the browser.</p>
       </div>
