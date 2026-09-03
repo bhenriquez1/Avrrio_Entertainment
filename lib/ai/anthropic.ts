@@ -9,6 +9,10 @@ export class AINotConfiguredError extends Error {
   }
 }
 
+export function isClaudeConfigured(): boolean {
+  return Boolean(process.env.ANTHROPIC_API_KEY);
+}
+
 export async function callClaude(params: {
   system: string;
   prompt: string;
