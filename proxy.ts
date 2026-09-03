@@ -27,7 +27,6 @@ const devBypassActive = isDevBypassActive();
 const guestModeActive = isGuestModeActive();
 
 const PUBLIC_PATHS = new Set([
-  "/",
   "/login",
   "/signup",
   "/reset-password",
@@ -38,13 +37,6 @@ const PUBLIC_PATHS = new Set([
 // Routes that perform the login/logout exchange itself can't require a
 // session cookie — they're how the cookie gets issued/cleared in the first place.
 const OPEN_API_PATHS = new Set(["/api/auth/access", "/api/auth/logout"]);
-
-const PROTECTED_PREFIXES = [
-  "/studio",
-  "/production",
-  "/admin",
-  "/api",
-];
 
 const SECURITY_HEADERS: Record<string, string> = {
   "X-Frame-Options": "DENY",
@@ -77,10 +69,6 @@ function unauthorized() {
       headers: { "WWW-Authenticate": 'Basic realm="Avrrio Entertainment", charset="UTF-8"' },
     })
   );
-}
-
-function isProtectedPath(pathname: string): boolean {
-  return PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
 export async function proxy(request: NextRequest) {
@@ -123,7 +111,10 @@ export async function proxy(request: NextRequest) {
     return withSecurityHeaders(NextResponse.next());
   }
 
-  if (PUBLIC_PATHS.has(pathname) || OPEN_API_PATHS.has(pathname) || !isProtectedPath(pathname)) {
+  // Private by default: only explicitly listed authentication/setup pages and
+  // the login exchange endpoints are reachable without a signed session.
+  // This also protects new Reader/studio routes automatically when added.
+  if (PUBLIC_PATHS.has(pathname) || OPEN_API_PATHS.has(pathname)) {
     return withSecurityHeaders(NextResponse.next());
   }
 
