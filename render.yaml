@@ -1,0 +1,18 @@
+services:
+  - type: pserv
+    name: avrrio-blender-worker
+    runtime: docker
+    region: virginia
+    plan: starter
+    dockerfilePath: ./services/blender-worker/Dockerfile
+    dockerContext: ./services/blender-worker
+    autoDeployTrigger: commit
+    maxShutdownDelaySeconds: 300
+    healthCheckPath: /health
+    envVars:
+      - key: BLENDER_WORKER_TOKEN
+        generateValue: true
+      - key: BLENDER_MAX_JOBS
+        value: "1"
+      - key: BLENDER_JOB_TTL_SECONDS
+        value: "21600"
