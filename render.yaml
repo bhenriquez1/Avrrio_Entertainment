@@ -8,7 +8,6 @@ services:
     dockerContext: ./services/blender-worker
     autoDeployTrigger: commit
     maxShutdownDelaySeconds: 300
-    healthCheckPath: /health
     envVars:
       - key: BLENDER_WORKER_TOKEN
         generateValue: true
