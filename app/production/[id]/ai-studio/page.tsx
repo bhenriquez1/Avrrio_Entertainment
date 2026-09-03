@@ -79,7 +79,7 @@ export default function AIStudioPage({ params }: { params: Promise<{ id: string 
           <p>OPENAI_API_KEY=<span className="text-zinc-600">sk-…</span></p>
           <p>ANTHROPIC_API_KEY=<span className="text-zinc-600">sk-ant-…</span></p>
           <p>RUNWAY_API_KEY=<span className="text-zinc-600">key_…</span></p>
-          <p>KLING_ACCESS_KEY / KLING_SECRET_KEY=<span className="text-zinc-600">••••</span></p>
+          <p>KLING_API_KEY=<span className="text-zinc-600">••••</span></p>
           <p>ELEVENLABS_API_KEY=<span className="text-zinc-600">••••</span></p>
           <p>BLENDER_WORKER_URL / BLENDER_WORKER_TOKEN=<span className="text-zinc-600">••••</span></p>
         </div>

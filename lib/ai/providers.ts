@@ -32,7 +32,7 @@ export class ProviderNotConfiguredError extends Error {
 export function providerConfiguration() {
   return {
     runway: Boolean(process.env.RUNWAY_API_KEY),
-    kling: Boolean(process.env.KLING_ACCESS_KEY && process.env.KLING_SECRET_KEY),
+    kling: Boolean(process.env.KLING_API_KEY),
     elevenlabs: Boolean(process.env.ELEVENLABS_API_KEY),
     blender: Boolean(process.env.BLENDER_WORKER_URL && process.env.BLENDER_WORKER_TOKEN),
   };
