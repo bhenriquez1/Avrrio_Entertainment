@@ -1,5 +1,5 @@
 import { listItems, getItem, saveItem, deleteItem } from "./storage";
-import type { Production, ProductionQueueJob } from "@/types/production";
+import type { CharacterVoice, Production, ProductionQueueJob } from "@/types/production";
 import type { CanonRecord } from "@/types/canon";
 import type { Season, Episode } from "@/types/episode";
 import type { CreativeMessage } from "@/types/ai";
@@ -114,4 +114,15 @@ export async function saveProductionJob(
   const job: ProductionQueueJob = { ...data, id: data.id ?? newId(), productionId, createdAt: data.createdAt ?? now, updatedAt: now };
   await saveItem(uid, `production-jobs-${productionId}`, job);
   return job;
+}
+
+export async function listCharacterVoices(uid: string, productionId: string): Promise<CharacterVoice[]> {
+  return listItems<CharacterVoice>(uid, `character-voices-${productionId}`);
+}
+
+export async function saveCharacterVoice(uid: string, productionId: string, data: Omit<CharacterVoice, "id" | "productionId" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: string }): Promise<CharacterVoice> {
+  const now = nowIso();
+  const voice: CharacterVoice = { ...data, id: data.id ?? newId(), productionId, createdAt: data.createdAt ?? now, updatedAt: now };
+  await saveItem(uid, `character-voices-${productionId}`, voice);
+  return voice;
 }

@@ -38,3 +38,17 @@ export interface ProductionQueueJob {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface CharacterVoice {
+  id: string;
+  productionId: string;
+  characterName: string;
+  provider: "elevenlabs";
+  voiceId: string;
+  voiceVersion: string;
+  status: "candidate" | "approved" | "retired";
+  emotionalDirection: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
