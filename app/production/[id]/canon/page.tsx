@@ -11,7 +11,7 @@ type Tab = "approved" | "pending" | "import";
 
 export default function CanonPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: productionId } = use(params);
-  const { uid, status } = useAuth();
+  const { uid, status, getIdToken } = useAuth();
   const [canon, setCanon] = useState<CanonRecord[]>([]);
   const [tab, setTab] = useState<Tab>("pending");
   const [loading, setLoading] = useState(true);
@@ -32,7 +32,10 @@ export default function CanonPage({ params }: { params: Promise<{ id: string }> 
     setLoading(false);
   }, [uid, productionId, status]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const loadTimer = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(loadTimer);
+  }, [load]);
 
   const handleApprove = async (recordId: string) => {
     setActionLoading(true);
@@ -60,11 +63,17 @@ export default function CanonPage({ params }: { params: Promise<{ id: string }> 
 
     try {
       const approvedCanon = canon.filter((c) => c.status === "approved");
+      const token = await getIdToken();
+      if (!token) throw new Error("Your secure session expired. Please sign in again.");
+      const authenticatedHeaders = {
+        "content-type": "application/json",
+        authorization: `Bearer ${token}`,
+      };
 
       // Step 1: OpenAI extracts canon proposals
       const extractRes = await fetch("/api/canon/extract", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: authenticatedHeaders,
         body: JSON.stringify({
           documentText: docText,
           existingCanon: approvedCanon.map((c) => ({ title: c.title, statement: c.statement })),
@@ -79,7 +88,7 @@ export default function CanonPage({ params }: { params: Promise<{ id: string }> 
       // Step 2: Claude independently reviews for continuity
       const reviewRes = await fetch("/api/canon/review", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: authenticatedHeaders,
         body: JSON.stringify({ proposals: extracted, approvedCanon }),
       });
       if (!reviewRes.ok) throw new Error((await reviewRes.json()).error ?? "Review failed");
