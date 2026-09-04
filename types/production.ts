@@ -52,3 +52,19 @@ export interface CharacterVoice {
   createdAt: string;
   updatedAt: string;
 }
+
+export type SceneStatus = "draft" | "review" | "approved";
+
+export interface StoryScene {
+  id: string;
+  productionId: string;
+  title: string;
+  storyContext: string;
+  action: string;
+  visualDirection: string;
+  status: SceneStatus;
+  linkedCanonIds: string[];
+  productionJobId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

@@ -1,5 +1,5 @@
 import { listItems, getItem, saveItem, deleteItem } from "./storage";
-import type { CharacterVoice, Production, ProductionQueueJob } from "@/types/production";
+import type { CharacterVoice, Production, ProductionQueueJob, StoryScene } from "@/types/production";
 import type { CanonRecord } from "@/types/canon";
 import type { Season, Episode } from "@/types/episode";
 import type { CreativeMessage } from "@/types/ai";
@@ -125,4 +125,15 @@ export async function saveCharacterVoice(uid: string, productionId: string, data
   const voice: CharacterVoice = { ...data, id: data.id ?? newId(), productionId, createdAt: data.createdAt ?? now, updatedAt: now };
   await saveItem(uid, `character-voices-${productionId}`, voice);
   return voice;
+}
+
+export async function listScenes(uid: string, productionId: string): Promise<StoryScene[]> {
+  return listItems<StoryScene>(uid, `scenes-${productionId}`);
+}
+
+export async function saveScene(uid: string, productionId: string, data: Omit<StoryScene, "id" | "productionId" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: string }): Promise<StoryScene> {
+  const now = nowIso();
+  const scene: StoryScene = { ...data, id: data.id ?? newId(), productionId, createdAt: data.createdAt ?? now, updatedAt: now };
+  await saveItem(uid, `scenes-${productionId}`, scene);
+  return scene;
 }
