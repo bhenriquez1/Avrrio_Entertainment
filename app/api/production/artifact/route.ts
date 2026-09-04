@@ -14,7 +14,8 @@ export async function GET(request: Request) {
     if (!path || !path.startsWith(`users/${session.uid}/productions/`) || !path.includes("/outputs/") || !adminStorage) return NextResponse.json({ error: "Invalid artifact request." }, { status: 400 });
     const [bytes] = await adminStorage.bucket().file(path).download();
     const [metadata] = await adminStorage.bucket().file(path).getMetadata();
-    return new Response(bytes, { headers: { "Content-Type": metadata.contentType ?? "application/octet-stream", "Cache-Control": "private, max-age=3600" } });
+    const body = Uint8Array.from(bytes).buffer;
+    return new Response(body, { headers: { "Content-Type": metadata.contentType ?? "application/octet-stream", "Cache-Control": "private, max-age=3600" } });
   }
   if (!jobId || (provider !== "blender" && provider !== "runway")) return NextResponse.json({ error: "Invalid artifact request." }, { status: 400 });
   if (provider === "runway") {
