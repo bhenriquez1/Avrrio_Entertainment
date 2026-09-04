@@ -45,6 +45,7 @@ export function IdentAnimation({ onComplete }: { onComplete?: () => void }) {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    const context = ctx;
 
     const W = canvas.width;
     const H = canvas.height;
@@ -80,14 +81,14 @@ export function IdentAnimation({ onComplete }: { onComplete?: () => void }) {
     let frame = 0;
 
     function drawGlow(x: number, y: number, r: number, alpha: number) {
-      const grad = ctx.createRadialGradient(x, y, 0, x, y, r * 5);
+      const grad = context.createRadialGradient(x, y, 0, x, y, r * 5);
       grad.addColorStop(0, GOLD_GLOW + (alpha * 0.9).toFixed(2) + ")");
       grad.addColorStop(0.4, GOLD_GLOW + (alpha * 0.3).toFixed(2) + ")");
       grad.addColorStop(1, GOLD_GLOW + "0)");
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(x, y, r * 5, 0, Math.PI * 2);
-      ctx.fill();
+      context.fillStyle = grad;
+      context.beginPath();
+      context.arc(x, y, r * 5, 0, Math.PI * 2);
+      context.fill();
     }
 
     function tick() {
