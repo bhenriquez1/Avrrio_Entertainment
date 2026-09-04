@@ -1,5 +1,5 @@
 import { listItems, getItem, saveItem, deleteItem } from "./storage";
-import type { Production } from "@/types/production";
+import type { Production, ProductionQueueJob } from "@/types/production";
 import type { CanonRecord } from "@/types/canon";
 import type { Season, Episode } from "@/types/episode";
 import type { CreativeMessage } from "@/types/ai";
@@ -98,4 +98,20 @@ export async function saveCreativeMessage(
   };
   await saveItem(uid, `creative-room-${productionId}`, message);
   return message;
+}
+
+// Production Queue — drafts remain local until Brian explicitly submits a paid generation.
+export async function listProductionJobs(uid: string, productionId: string): Promise<ProductionQueueJob[]> {
+  return listItems<ProductionQueueJob>(uid, `production-jobs-${productionId}`);
+}
+
+export async function saveProductionJob(
+  uid: string,
+  productionId: string,
+  data: Omit<ProductionQueueJob, "id" | "productionId" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: string }
+): Promise<ProductionQueueJob> {
+  const now = nowIso();
+  const job: ProductionQueueJob = { ...data, id: data.id ?? newId(), productionId, createdAt: data.createdAt ?? now, updatedAt: now };
+  await saveItem(uid, `production-jobs-${productionId}`, job);
+  return job;
 }

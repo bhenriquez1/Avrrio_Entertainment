@@ -1,11 +1,31 @@
 "use client";
-import { use } from "react";
+import { use, useCallback, useEffect, useState } from "react";
+import { useAuth } from "@/lib/firebase/AuthProvider";
+import { listProductionJobs, saveProductionJob } from "@/lib/production/repository";
+import type { ProductionProvider, ProductionQueueJob } from "@/types/production";
+
+const PROVIDERS: Array<{ id: ProductionProvider; label: string; role: string; types: ProductionQueueJob["assetType"][] }> = [
+  { id: "runway", label: "Runway", role: "Cinematic and environmental video", types: ["video"] },
+  { id: "kling", label: "Kling", role: "Character motion and physical action", types: ["video"] },
+  { id: "elevenlabs", label: "ElevenLabs", role: "Approved voices, dialogue, and audio", types: ["voice", "audio"] },
+  { id: "blender", label: "Blender", role: "Deterministic 3D scenes and studio identity", types: ["3d-render", "image"] },
+];
+const STATUS_STYLE: Record<string, string> = { draft: "text-slate-400", ready: "text-amber-300", submitted: "text-blue-300", processing: "text-violet-300", review: "text-cyan-300", approved: "text-emerald-300", failed: "text-red-300", archived: "text-slate-600" };
+
 export default function ProductionQueuePage({ params }: { params: Promise<{ id: string }> }) {
-  use(params);
-  return (
-    <main className="p-8">
-      <h1 className="text-xl font-bold text-zinc-50 mb-2">Production Queue</h1>
-      <p className="text-sm text-zinc-500">Coming in v0.2 — Pre-Production.</p>
-    </main>
-  );
+  const { id } = use(params); const { uid, status } = useAuth();
+  const [jobs, setJobs] = useState<ProductionQueueJob[]>([]); const [showComposer, setShowComposer] = useState(false); const [title, setTitle] = useState(""); const [prompt, setPrompt] = useState(""); const [context, setContext] = useState(""); const [provider, setProvider] = useState<ProductionProvider>("runway"); const [saving, setSaving] = useState(false);
+  const load = useCallback(async () => { if (status === "allowed") setJobs((await listProductionJobs(uid, id)).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))); }, [id, status, uid]);
+  useEffect(() => { const timer = window.setTimeout(() => { void load(); }, 0); return () => window.clearTimeout(timer); }, [load]);
+  const providerInfo = PROVIDERS.find((item) => item.id === provider) ?? PROVIDERS[0];
+
+  async function createDraft(event: React.FormEvent) { event.preventDefault(); if (!title.trim() || !prompt.trim()) return; setSaving(true); const created = await saveProductionJob(uid, id, { title: title.trim(), provider, assetType: providerInfo.types[0], prompt: prompt.trim(), context: context.trim(), status: "draft", providerJobId: null, outputUrls: [], error: null }); setJobs((current) => [created, ...current]); setTitle(""); setPrompt(""); setContext(""); setShowComposer(false); setSaving(false); }
+  async function updateStatus(job: ProductionQueueJob, nextStatus: ProductionQueueJob["status"]) { const updated = await saveProductionJob(uid, id, { ...job, status: nextStatus }); setJobs((current) => current.map((item) => item.id === job.id ? updated : item)); }
+
+  return <main className="min-h-full bg-[radial-gradient(circle_at_top_right,rgba(30,64,175,.14),transparent_36%)] p-8"><div className="mx-auto max-w-6xl">
+    <div className="flex items-end justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.28em] text-amber-300/75">Production Director</p><h1 className="mt-2 text-2xl font-semibold text-white">Production Queue</h1><p className="mt-2 text-sm text-slate-400">Prepare, review, and approve work before any provider spends credits.</p></div><button onClick={() => setShowComposer(true)} className="rounded-xl bg-amber-300 px-4 py-2.5 text-sm font-bold text-slate-950">+ Prepare Job</button></div>
+    <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{PROVIDERS.map((item) => <div key={item.id} className="rounded-xl border border-blue-200/10 bg-white/[0.025] p-4"><p className="text-sm font-semibold text-white">{item.label}</p><p className="mt-1 text-xs leading-5 text-slate-500">{item.role}</p></div>)}</div>
+    {showComposer && <form onSubmit={createDraft} className="mt-6 rounded-2xl border border-amber-200/15 bg-[#0b1122] p-6"><div className="flex items-center justify-between"><h2 className="font-semibold text-white">Prepare production job</h2><button type="button" onClick={() => setShowComposer(false)} className="text-slate-500">×</button></div><div className="mt-5 grid gap-4 md:grid-cols-2"><label className="text-xs text-slate-400">Title<input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1.5 w-full rounded-lg border border-blue-200/10 bg-black/20 px-3 py-2.5 text-sm text-white outline-none" placeholder="Samantha dream — opening shot" /></label><label className="text-xs text-slate-400">Provider<select value={provider} onChange={(e) => setProvider(e.target.value as ProductionProvider)} className="mt-1.5 w-full rounded-lg border border-blue-200/10 bg-[#080d1c] px-3 py-2.5 text-sm text-white">{PROVIDERS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label></div><label className="mt-4 block text-xs text-slate-400">Story context<input value={context} onChange={(e) => setContext(e.target.value)} className="mt-1.5 w-full rounded-lg border border-blue-200/10 bg-black/20 px-3 py-2.5 text-sm text-white outline-none" placeholder="Season 1 • Episode 1 • Samantha's Dream" /></label><label className="mt-4 block text-xs text-slate-400">Direction<textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} className="mt-1.5 w-full resize-none rounded-lg border border-blue-200/10 bg-black/20 px-3 py-2.5 text-sm text-white outline-none" placeholder="Describe the approved shot, performance, camera, lighting, or audio direction…" /></label><div className="mt-4 flex items-center justify-between"><p className="text-[11px] text-amber-200/55">This saves a draft only. No provider credits will be spent.</p><button disabled={saving || !title.trim() || !prompt.trim()} className="rounded-lg bg-white px-4 py-2 text-sm font-bold text-slate-950 disabled:opacity-30">{saving ? "Saving…" : "Save Draft"}</button></div></form>}
+    <section className="mt-8 space-y-3">{jobs.map((job) => <article key={job.id} className="rounded-xl border border-blue-200/10 bg-white/[0.025] p-5"><div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-[9px] font-bold uppercase tracking-[0.2em] text-blue-200/35">{job.provider} • {job.assetType}</p><h2 className="mt-1 text-sm font-semibold text-white">{job.title}</h2><p className="mt-1 text-xs text-slate-600">{job.context || "General production"}</p></div><span className={`text-[10px] font-bold uppercase tracking-[0.18em] ${STATUS_STYLE[job.status]}`}>{job.status}</span></div><p className="mt-4 line-clamp-3 text-sm leading-6 text-slate-400">{job.prompt}</p><div className="mt-4 flex gap-4 text-xs">{job.status === "draft" && <button onClick={() => void updateStatus(job, "ready")} className="text-amber-300 hover:text-amber-200">Mark ready for approval</button>}{job.status === "ready" && <span className="text-slate-500">Submission approval and estimated provider cost will appear here.</span>}<button onClick={() => void updateStatus(job, "archived")} className="text-slate-600 hover:text-slate-300">Archive</button></div></article>)}{jobs.length === 0 && <div className="rounded-2xl border border-dashed border-blue-200/10 py-16 text-center"><p className="text-sm text-slate-400">No production jobs prepared yet.</p><p className="mt-2 text-xs text-slate-600">Approved story decisions can become shots, voices, audio, or Blender renders.</p></div>}</section>
+  </div></main>;
 }
