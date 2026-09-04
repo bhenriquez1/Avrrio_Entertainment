@@ -110,7 +110,24 @@ export default function ProductionOverviewPage({ params }: { params: Promise<{ i
         </div>
       )}
 
-      {contradictions.length === 0 && pendingCanon.length === 0 && (
+      {contradictions.length === 0 && pendingCanon.length === 0 && approvedCanon.length === 0 && (
+        <div className="mt-6">
+          <div className="flex items-start gap-2 rounded-lg border border-zinc-700 bg-zinc-900/50 px-4 py-3">
+            <span className="text-zinc-500">○</span>
+            <p className="text-sm text-zinc-400">Canon initialized — no approved story records yet.</p>
+          </div>
+          <div className="mt-4 flex gap-3">
+            <Link href={`/production/${id}/canon`} className="rounded-lg border border-zinc-700 px-4 py-2 text-xs font-semibold text-zinc-300 hover:bg-zinc-800 transition-colors">
+              Import Canon
+            </Link>
+            <Link href={`/production/${id}/story-bible`} className="rounded-lg bg-zinc-100 px-4 py-2 text-xs font-semibold text-zinc-900 hover:bg-white transition-colors">
+              Continue Development
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {contradictions.length === 0 && pendingCanon.length === 0 && approvedCanon.length > 0 && (
         <div className="mt-6">
           <div className="flex items-start gap-2 rounded-lg border border-emerald-900/40 bg-emerald-950/20 px-4 py-3">
             <span className="text-emerald-400">✓</span>
