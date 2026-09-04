@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       if (!body.job || body.job.status !== "ready") return NextResponse.json({ error: "Only reviewed, ready jobs can be submitted." }, { status: 400 });
       return NextResponse.json(await submitProviderJob(body.job, user.uid));
     }
-    if (body.operation === "status" && body.provider && body.providerJobId) return NextResponse.json(await getProviderTask(body.provider, body.providerJobId));
+    if (body.operation === "status" && body.provider && body.providerJobId) return NextResponse.json(await getProviderTask(body.provider, body.providerJobId, body.job ? { uid: user.uid, productionId: body.job.productionId, jobId: body.job.id } : undefined));
     return NextResponse.json({ error: "Invalid production operation." }, { status: 400 });
   } catch (error) {
     if (error instanceof UnauthorizedError) return NextResponse.json({ error: error.message }, { status: 401 });

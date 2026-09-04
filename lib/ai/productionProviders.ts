@@ -50,14 +50,20 @@ export async function submitProviderJob(job: ProductionQueueJob, uid: string): P
   throw new Error(`${job.provider} dispatch is not enabled in this production stage yet.`);
 }
 
-export async function getProviderTask(provider: ProductionProvider, id: string): Promise<ProviderTask> {
+export async function getProviderTask(provider: ProductionProvider, id: string, storage?: { uid: string; productionId: string; jobId: string }): Promise<ProviderTask> {
   if (provider === "runway") {
     const key = process.env.RUNWAY_API_KEY; if (!key) throw new Error("Runway is not configured.");
     const response = await fetch(`${RUNWAY_API}/tasks/${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${key}`, "X-Runway-Version": RUNWAY_VERSION }, cache: "no-store" });
     const data = await response.json() as { id?: string; status?: string; output?: string[]; failure?: string; failureCode?: string };
     if (!response.ok) throw new Error(`Runway status check failed (${response.status}).`);
     const status = mapRunwayStatus(data.status ?? "PENDING");
-    return { id, status, outputUrls: status === "review" ? [`/api/production/artifact?provider=runway&jobId=${encodeURIComponent(id)}`] : [], error: data.failure ?? data.failureCode ?? null };
+    let outputUrls: string[] = [];
+    if (status === "review" && storage && data.output?.[0]) {
+      const media = await fetch(data.output[0]);
+      if (!media.ok) throw new Error("Runway completed, but its output could not be archived.");
+      outputUrls = [await storeProductionArtifact(storage.uid, storage.productionId, storage.jobId, await media.arrayBuffer(), media.headers.get("content-type") ?? "video/mp4", "mp4")];
+    } else if (status === "review") outputUrls = [`/api/production/artifact?provider=runway&jobId=${encodeURIComponent(id)}`];
+    return { id, status, outputUrls, error: data.failure ?? data.failureCode ?? null };
   }
   if (provider === "blender") {
     const url = process.env.BLENDER_WORKER_URL; const token = process.env.BLENDER_WORKER_TOKEN; if (!url || !token) throw new Error("Blender Worker is not configured.");
@@ -65,7 +71,13 @@ export async function getProviderTask(provider: ProductionProvider, id: string):
     const data = await response.json() as { status?: string; artifactPath?: string; error?: string };
     if (!response.ok) throw new Error(`Blender status check failed (${response.status}).`);
     const status = data.status === "complete" ? "review" : data.status === "failed" ? "failed" : data.status === "running" ? "processing" : "submitted";
-    return { id, status, outputUrls: data.artifactPath ? [`/api/production/artifact?provider=blender&jobId=${encodeURIComponent(id)}`] : [], error: data.error ?? null };
+    let outputUrls: string[] = data.artifactPath ? [`/api/production/artifact?provider=blender&jobId=${encodeURIComponent(id)}`] : [];
+    if (status === "review" && data.artifactPath && storage) {
+      const artifact = await fetch(`${url}/jobs/${encodeURIComponent(id)}/artifact`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!artifact.ok) throw new Error("Blender completed, but its output could not be archived.");
+      outputUrls = [await storeProductionArtifact(storage.uid, storage.productionId, storage.jobId, await artifact.arrayBuffer(), artifact.headers.get("content-type") ?? "image/png", "png")];
+    }
+    return { id, status, outputUrls, error: data.error ?? null };
   }
   throw new Error(`${provider} status polling is not enabled yet.`);
 }

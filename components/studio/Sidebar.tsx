@@ -6,6 +6,7 @@ const SECTIONS = [
   { label: "Story", items: [["Story Bible", "/story-bible"], ["Characters", "/characters"], ["Relationships", "/memory/relationships"], ["Timeline", "/timeline"], ["Powers & Rules", "/memory/powers-rules"], ["Locations", "/locations"], ["Secrets", "/memory/secrets"], ["Foreshadowing", "/memory/foreshadowing"], ["Ideas", "/memory/ideas"], ["Canon Decisions", "/canon"]] },
   { label: "Structure", items: [["Seasons", "/seasons"], ["Episodes", "/episodes"], ["Scripts", "/scripts"], ["Scenes", "/scenes"], ["Shots", "/shots"]] },
   { label: "Production", items: [["Assets", "/assets"], ["Voices", "/voices"], ["Production Queue", "/production-queue"], ["Quality Review", "/qa"]] },
+  { label: "Distribution", items: [["YouTube Publisher", "/youtube"]] },
   { label: "Intelligence", items: [["Creative Room", "/creative-room"], ["AI Providers", "/ai-studio"]] },
 ] as const;
 
