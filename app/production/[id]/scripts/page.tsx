@@ -1,11 +1,18 @@
 "use client";
-import { use } from "react";
+import { use, useCallback, useEffect, useState } from "react";
+import { useAuth } from "@/lib/firebase/AuthProvider";
+import { listCanon, listScripts, saveScript } from "@/lib/production/repository";
+import type { ProductionScript } from "@/types/production";
+
 export default function ScriptsPage({ params }: { params: Promise<{ id: string }> }) {
-  use(params);
-  return (
-    <main className="p-8">
-      <h1 className="text-xl font-bold text-zinc-50 mb-2">Scripts</h1>
-      <p className="text-sm text-zinc-500">Coming in v0.2 — Pre-Production.</p>
-    </main>
-  );
+  const { id } = use(params); const { uid, status } = useAuth();
+  const [items, setItems] = useState<ProductionScript[]>([]); const [canonIds, setCanonIds] = useState<string[]>([]);
+  const [open, setOpen] = useState(false); const [title, setTitle] = useState(""); const [context, setContext] = useState(""); const [content, setContent] = useState("");
+  const load = useCallback(async () => { if (status !== "allowed") return; const [scripts, canon] = await Promise.all([listScripts(uid, id), listCanon(uid, id)]); setItems(scripts.sort((a,b) => b.updatedAt.localeCompare(a.updatedAt))); setCanonIds(canon.filter((c) => c.status === "approved").map((c) => c.id)); }, [id,status,uid]);
+  useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
+  async function create(e: React.FormEvent) { e.preventDefault(); if (!title.trim() || !content.trim()) return; const saved = await saveScript(uid,id,{title:title.trim(),storyContext:context.trim(),content:content.trim(),status:"draft",linkedCanonIds:canonIds}); setItems((x)=>[saved,...x]); setTitle("");setContext("");setContent("");setOpen(false); }
+  async function advance(item: ProductionScript) { const next = item.status === "draft" ? "review" : "approved"; const saved=await saveScript(uid,id,{...item,status:next});setItems((x)=>x.map((v)=>v.id===item.id?saved:v)); }
+  return <main className="p-8"><div className="mx-auto max-w-6xl"><div className="flex items-end justify-between"><div><p className="text-[10px] uppercase tracking-[.28em] text-violet-300/70">Story Department</p><h1 className="mt-2 text-2xl font-semibold text-white">Scripts</h1><p className="mt-2 text-sm text-slate-400">Write and approve scripts against {canonIds.length} locked Story Memory facts.</p></div><button onClick={()=>setOpen(true)} className="rounded-xl bg-violet-300 px-4 py-2.5 text-sm font-bold text-slate-950">+ New Script</button></div>
+  {open&&<form onSubmit={create} className="mt-6 space-y-4 rounded-2xl border border-violet-200/15 bg-[#0b1122] p-6"><input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="Script title" className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2.5 text-white"/><input value={context} onChange={(e)=>setContext(e.target.value)} placeholder="Season • Episode • Act" className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2.5 text-white"/><textarea value={content} onChange={(e)=>setContent(e.target.value)} rows={14} placeholder="INT. LOCATION — TIME&#10;&#10;Action and dialogue…" className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-3 font-mono text-sm text-white"/><div className="flex justify-between"><button type="button" onClick={()=>setOpen(false)} className="text-sm text-slate-500">Cancel</button><button className="rounded-lg bg-white px-4 py-2 text-sm font-bold text-slate-950">Save draft</button></div></form>}
+  <section className="mt-8 space-y-4">{items.map((item)=><article key={item.id} className="rounded-2xl border border-white/10 bg-white/[.025] p-5"><div className="flex justify-between"><div><p className="text-[10px] uppercase tracking-wider text-slate-600">{item.storyContext||"Unplaced"}</p><h2 className="mt-1 font-semibold text-white">{item.title}</h2></div><span className="text-[10px] font-bold uppercase text-violet-300">{item.status}</span></div><pre className="mt-4 max-h-48 overflow-hidden whitespace-pre-wrap font-mono text-xs leading-6 text-slate-400">{item.content}</pre><div className="mt-4 flex gap-4 text-xs">{item.status!=="approved"&&<button onClick={()=>void advance(item)} className="text-emerald-300">{item.status==="draft"?"Send to review":"Approve script"}</button>}<span className="text-slate-600">{item.linkedCanonIds.length} Story Memory links</span></div></article>)}{!items.length&&<p className="rounded-2xl border border-dashed border-white/10 py-16 text-center text-sm text-slate-500">No scripts yet.</p>}</section></div></main>;
 }

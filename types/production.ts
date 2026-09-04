@@ -68,3 +68,27 @@ export interface StoryScene {
   createdAt: string;
   updatedAt: string;
 }
+
+export type ReviewStatus = "draft" | "review" | "approved";
+
+export interface ProductionScript {
+  id: string; productionId: string; title: string; storyContext: string; content: string;
+  status: ReviewStatus; linkedCanonIds: string[]; createdAt: string; updatedAt: string;
+}
+
+export interface ProductionShot {
+  id: string; productionId: string; title: string; sceneContext: string; description: string;
+  camera: string; durationSeconds: number; status: ReviewStatus; productionJobId: string | null;
+  createdAt: string; updatedAt: string;
+}
+
+export interface ReferenceAsset {
+  id: string; productionId: string; name: string; kind: "character" | "location" | "prop" | "style";
+  dataUrl: string; mimeType: string; notes: string; status: ReviewStatus; createdAt: string; updatedAt: string;
+}
+
+export interface QualityReview {
+  id: string; productionId: string; jobId: string; title: string; continuity: boolean;
+  visualQuality: boolean; audioQuality: boolean; rightsCleared: boolean; notes: string;
+  status: "pending" | "approved" | "changes_requested"; createdAt: string; updatedAt: string;
+}

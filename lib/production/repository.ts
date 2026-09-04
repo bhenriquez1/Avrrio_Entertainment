@@ -1,5 +1,5 @@
 import { listItems, getItem, saveItem, deleteItem } from "./storage";
-import type { CharacterVoice, Production, ProductionQueueJob, StoryScene } from "@/types/production";
+import type { CharacterVoice, Production, ProductionQueueJob, ProductionScript, ProductionShot, QualityReview, ReferenceAsset, StoryScene } from "@/types/production";
 import type { CanonRecord } from "@/types/canon";
 import type { Season, Episode } from "@/types/episode";
 import type { CreativeMessage } from "@/types/ai";
@@ -137,3 +137,19 @@ export async function saveScene(uid: string, productionId: string, data: Omit<St
   await saveItem(uid, `scenes-${productionId}`, scene);
   return scene;
 }
+
+async function saveProductionRecord<T extends { id: string; productionId: string; createdAt: string; updatedAt: string }>(uid: string, productionId: string, collectionName: string, data: Omit<T, "id" | "productionId" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: string }): Promise<T> {
+  const now = nowIso();
+  const record = { ...data, id: data.id ?? newId(), productionId, createdAt: data.createdAt ?? now, updatedAt: now } as T;
+  await saveItem(uid, `${collectionName}-${productionId}`, record);
+  return record;
+}
+
+export const listScripts = (uid: string, productionId: string) => listItems<ProductionScript>(uid, `scripts-${productionId}`);
+export const saveScript = (uid: string, productionId: string, data: Omit<ProductionScript, "id" | "productionId" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: string }) => saveProductionRecord<ProductionScript>(uid, productionId, "scripts", data);
+export const listShots = (uid: string, productionId: string) => listItems<ProductionShot>(uid, `shots-${productionId}`);
+export const saveShot = (uid: string, productionId: string, data: Omit<ProductionShot, "id" | "productionId" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: string }) => saveProductionRecord<ProductionShot>(uid, productionId, "shots", data);
+export const listReferenceAssets = (uid: string, productionId: string) => listItems<ReferenceAsset>(uid, `assets-${productionId}`);
+export const saveReferenceAsset = (uid: string, productionId: string, data: Omit<ReferenceAsset, "id" | "productionId" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: string }) => saveProductionRecord<ReferenceAsset>(uid, productionId, "assets", data);
+export const listQualityReviews = (uid: string, productionId: string) => listItems<QualityReview>(uid, `quality-reviews-${productionId}`);
+export const saveQualityReview = (uid: string, productionId: string, data: Omit<QualityReview, "id" | "productionId" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: string }) => saveProductionRecord<QualityReview>(uid, productionId, "quality-reviews", data);
