@@ -1,5 +1,5 @@
 import { listItems, getItem, saveItem, deleteItem } from "./storage";
-import type { CharacterVoice, Production, ProductionQueueJob, ProductionScript, ProductionShot, QualityReview, ReferenceAsset, StoryScene } from "@/types/production";
+import type { CharacterVoice, Production, ProductionQueueJob, ProductionScript, ProductionShot, QualityReview, ReferenceAsset, StoryLocation, StoryScene, TimelineEvent } from "@/types/production";
 import type { CanonRecord } from "@/types/canon";
 import type { Season, Episode } from "@/types/episode";
 import type { CreativeMessage } from "@/types/ai";
@@ -62,7 +62,7 @@ export async function deleteCanonRecord(uid: string, productionId: string, id: s
 export async function listSeasons(uid: string, productionId: string): Promise<Season[]> {
   return listItems<Season>(uid, `seasons-${productionId}`);
 }
-export async function saveSeason(uid: string, productionId: string, data: Omit<Season, "id" | "createdAt" | "updatedAt"> & { id?: string }): Promise<Season> {
+export async function saveSeason(uid: string, productionId: string, data: Omit<Season, "id" | "productionId" | "createdAt" | "updatedAt"> & { id?: string }): Promise<Season> {
   const now = nowIso();
   const season: Season = { ...data, id: data.id ?? newId(), productionId, createdAt: now, updatedAt: now };
   await saveItem(uid, `seasons-${productionId}`, season);
@@ -73,7 +73,7 @@ export async function saveSeason(uid: string, productionId: string, data: Omit<S
 export async function listEpisodes(uid: string, productionId: string, seasonId: string): Promise<Episode[]> {
   return listItems<Episode>(uid, `episodes-${seasonId}`);
 }
-export async function saveEpisode(uid: string, productionId: string, seasonId: string, data: Omit<Episode, "id" | "createdAt" | "updatedAt"> & { id?: string }): Promise<Episode> {
+export async function saveEpisode(uid: string, productionId: string, seasonId: string, data: Omit<Episode, "id" | "productionId" | "seasonId" | "createdAt" | "updatedAt"> & { id?: string }): Promise<Episode> {
   const now = nowIso();
   const ep: Episode = { ...data, id: data.id ?? newId(), productionId, seasonId, acts: data.acts ?? [], canonDependencies: data.canonDependencies ?? [], createdAt: now, updatedAt: now };
   await saveItem(uid, `episodes-${seasonId}`, ep);
@@ -153,3 +153,7 @@ export const listReferenceAssets = (uid: string, productionId: string) => listIt
 export const saveReferenceAsset = (uid: string, productionId: string, data: Omit<ReferenceAsset, "id" | "productionId" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: string }) => saveProductionRecord<ReferenceAsset>(uid, productionId, "assets", data);
 export const listQualityReviews = (uid: string, productionId: string) => listItems<QualityReview>(uid, `quality-reviews-${productionId}`);
 export const saveQualityReview = (uid: string, productionId: string, data: Omit<QualityReview, "id" | "productionId" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: string }) => saveProductionRecord<QualityReview>(uid, productionId, "quality-reviews", data);
+export const listLocations = (uid: string, productionId: string) => listItems<StoryLocation>(uid, `locations-${productionId}`);
+export const saveLocation = (uid: string, productionId: string, data: Omit<StoryLocation, "id" | "productionId" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: string }) => saveProductionRecord<StoryLocation>(uid, productionId, "locations", data);
+export const listTimelineEvents = (uid: string, productionId: string) => listItems<TimelineEvent>(uid, `timeline-${productionId}`);
+export const saveTimelineEvent = (uid: string, productionId: string, data: Omit<TimelineEvent, "id" | "productionId" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: string }) => saveProductionRecord<TimelineEvent>(uid, productionId, "timeline", data);
