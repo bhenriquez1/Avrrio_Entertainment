@@ -15,10 +15,11 @@ const IDENT_STORYBOARD = [
   { label: "Midnight", icon: "◼", note: "Complete darkness. Deep midnight blue emerges." },
   { label: "Materialize", icon: "·⁺·", note: "Gold, pearl, and blue-white particles appear scattered across the frame." },
   { label: "Orbit forms", icon: "◎", note: "Particles sweep into layered circular orbits — three rings at different radii and speeds." },
-  { label: "Spiral inward", icon: "⬡→", note: "Orbital radii shrink. Speed increases. Rings collapse toward the center in a golden spiral." },
-  { label: "Flash", icon: "✦", note: "Particles converge — a burst of luminous gold light." },
-  { label: "AVRRIO ENTERTAINMENT", icon: "Aa", note: "Wordmark materializes: AVRRIO in luminous gold, ENTERTAINMENT in pearl silver. Sonic signature resolves." },
-  { label: "Hold", icon: "—", note: "Logo holds with a subtle glow shimmer." },
+  { label: "Gravity catches", icon: "⬡→", note: "The scattered particles accelerate into Avrrio's asymmetrical elliptical path." },
+  { label: "Dimensional orbit", icon: "◎", note: "One living-gold trail sweeps behind and then in front of the wordmark." },
+  { label: "Pearl AVRRIO", icon: "Aa", note: "AVRRIO resolves in luminous pearl/silver; ENTERTAINMENT settles beneath it." },
+  { label: "Signature spark", icon: "✦", note: "The traveling point emerges toward camera, suspends, and pulses once on the final note." },
+  { label: "Recognition hold", icon: "—", note: "The gold orbit, silver wordmark, and single spark hold quietly for recognition." },
   { label: "Fade to midnight", icon: "◼", note: "Episode begins." },
 ];
 
@@ -174,7 +175,7 @@ export default function StudioBrandPage() {
           ))}
         </div>
         <p className="mt-2 text-xs text-zinc-600">
-          Duration target: 8–10 seconds. Direction: AVRRIO ORBIT — particles materialize, enter orbit, spiral inward, collapse to a golden flash, wordmark emerges. Midnight Blue + Luminous Gold + Pearl/Silver palette.
+          Canonical master ending: midnight-blue world, pearl/silver AVRRIO, living-gold dimensional orbit, and one restrained signature spark. Future character variants may interrupt this expected finish.
         </p>
       </section>
 
