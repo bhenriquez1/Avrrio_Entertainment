@@ -35,6 +35,7 @@ export interface ProductionQueueJob {
   providerJobId: string | null;
   outputUrls: string[];
   error: string | null;
+  voiceId?: string | null;
   createdAt: string;
   updatedAt: string;
 }

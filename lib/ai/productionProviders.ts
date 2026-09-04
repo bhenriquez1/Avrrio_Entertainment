@@ -1,4 +1,5 @@
 import type { ProductionProvider, ProductionQueueJob } from "@/types/production";
+import { storeProductionArtifact } from "@/lib/production/artifactStorage";
 
 const RUNWAY_API = "https://api.dev.runwayml.com/v1";
 const RUNWAY_VERSION = "2024-11-06";
@@ -12,7 +13,7 @@ function mapRunwayStatus(status: string): ProductionQueueJob["status"] {
   return "submitted";
 }
 
-export async function submitProviderJob(job: ProductionQueueJob): Promise<ProviderTask> {
+export async function submitProviderJob(job: ProductionQueueJob, uid: string): Promise<ProviderTask> {
   if (job.provider === "runway") {
     const key = process.env.RUNWAY_API_KEY;
     if (!key) throw new Error("Runway is not configured.");
@@ -32,6 +33,19 @@ export async function submitProviderJob(job: ProductionQueueJob): Promise<Provid
     const data = await response.json() as { id?: string; detail?: string };
     if (!response.ok || !data.id) throw new Error(data.detail ?? `Blender rejected the job (${response.status}).`);
     return { id: data.id, status: "submitted", outputUrls: [], error: null };
+  }
+  if (job.provider === "elevenlabs") {
+    const key = process.env.ELEVENLABS_API_KEY;
+    if (!key) throw new Error("ElevenLabs is not configured.");
+    if (!job.voiceId || !/^[A-Za-z0-9_-]{8,80}$/.test(job.voiceId)) throw new Error("Choose an approved ElevenLabs voice before submitting.");
+    if (!job.prompt.trim() || job.prompt.length > 5000) throw new Error("ElevenLabs production text must contain 1–5000 characters.");
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(job.voiceId)}?output_format=mp3_44100_128`, {
+      method: "POST", headers: { "xi-api-key": key, "Content-Type": "application/json" },
+      body: JSON.stringify({ text: job.prompt, model_id: process.env.ELEVENLABS_MODEL ?? "eleven_v3" }),
+    });
+    if (!response.ok) throw new Error((await response.text()).slice(0, 800) || `ElevenLabs rejected the job (${response.status}).`);
+    const outputUrl = await storeProductionArtifact(uid, job.productionId, job.id, await response.arrayBuffer(), response.headers.get("content-type") ?? "audio/mpeg", "mp3");
+    return { id: `elevenlabs-${job.id}`, status: "review", outputUrls: [outputUrl], error: null };
   }
   throw new Error(`${job.provider} dispatch is not enabled in this production stage yet.`);
 }

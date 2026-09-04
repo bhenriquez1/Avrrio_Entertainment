@@ -2,12 +2,20 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/auth/session";
 import { getProviderTask } from "@/lib/ai/productionProviders";
+import { adminStorage } from "@/lib/firebase/admin";
 
 export async function GET(request: Request) {
   const session = await verifySessionToken((await cookies()).get(SESSION_COOKIE_NAME)?.value ?? "");
   if (!session) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   const params = new URL(request.url).searchParams;
   const provider = params.get("provider"); const jobId = params.get("jobId");
+  if (provider === "firebase") {
+    const path = params.get("path");
+    if (!path || !path.startsWith(`users/${session.uid}/productions/`) || !path.includes("/outputs/") || !adminStorage) return NextResponse.json({ error: "Invalid artifact request." }, { status: 400 });
+    const [bytes] = await adminStorage.bucket().file(path).download();
+    const [metadata] = await adminStorage.bucket().file(path).getMetadata();
+    return new Response(bytes, { headers: { "Content-Type": metadata.contentType ?? "application/octet-stream", "Cache-Control": "private, max-age=3600" } });
+  }
   if (!jobId || (provider !== "blender" && provider !== "runway")) return NextResponse.json({ error: "Invalid artifact request." }, { status: 400 });
   if (provider === "runway") {
     const task = await getProviderTask("runway", jobId);
