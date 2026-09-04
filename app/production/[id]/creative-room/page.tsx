@@ -100,20 +100,22 @@ export default function CreativeRoomPage({ params }: { params: Promise<{ id: str
     }
   }
 
-  async function remember(message: CreativeMessage, decision: "idea" | "canon" | "rejected") {
+  // Status is always "proposed" here — Brian approves in the Canon tab.
+  // "Make Canon" is intentionally removed; "Propose Canon" saves as proposed for Brian's review.
+  async function remember(message: CreativeMessage, decision: "idea" | "propose") {
     const record = await saveCanonRecord(uid, productionId, {
       productionId,
       type: "world_detail" as CanonType,
-      title: `${decision === "canon" ? "Canon decision" : decision === "idea" ? "Creative idea" : "Rejected direction"}: ${contextLabel}`,
+      title: `${decision === "propose" ? "Proposed canon" : "Creative idea"}: ${contextLabel}`,
       statement: message.content,
-      status: decision === "canon" ? "approved" : decision === "rejected" ? "rejected" : "proposed",
+      status: "proposed",
       source: "Creative Room",
       proposedBy: message.role === "claude" ? "claude" : "openai",
-      approvedBy: decision === "canon" ? uid : null,
+      approvedBy: null,
       canonVersion: "1.0",
       supersedes: null,
       dependencies: [],
-      reviewNote: decision === "idea" ? "Saved as an idea; not canon." : "",
+      reviewNote: decision === "idea" ? "Saved as an idea — not a canon proposal." : "Proposed for canon review. Go to Canon → Pending to approve.",
       contradictions: [],
     });
     setCanon((current) => [...current, record]);
@@ -169,9 +171,8 @@ export default function CreativeRoomPage({ params }: { params: Promise<{ id: str
             </div>
             {message.role !== "user" && message.role !== "system" && (
               <div className="mt-2 flex gap-3 text-[11px] text-zinc-500">
-                <button onClick={() => remember(message, "idea")} className="hover:text-zinc-200">♡ Save Idea</button>
-                <button onClick={() => remember(message, "canon")} className="hover:text-emerald-300">✓ Make Canon</button>
-                <button onClick={() => remember(message, "rejected")} className="hover:text-red-300">✕ Reject</button>
+                <button onClick={() => void remember(message, "idea")} className="hover:text-zinc-200">♡ Save as Idea</button>
+                <button onClick={() => void remember(message, "propose")} className="hover:text-amber-300">◎ Propose Canon</button>
               </div>
             )}
           </article>
