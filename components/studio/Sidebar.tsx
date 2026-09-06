@@ -10,6 +10,7 @@ const SECTIONS = [
       ["Characters", "/characters"],
       ["Story", "/story-bible"],
       ["World", "/world"],
+      ["Locations", "/locations"],
     ],
   },
   {
@@ -31,6 +32,7 @@ const SECTIONS = [
       ["Storyboards", "/storyboards"],
       ["Production Queue", "/production-queue"],
       ["Review", "/qa"],
+      ["AI Studio", "/ai-studio"],
     ],
   },
   {
@@ -38,6 +40,12 @@ const SECTIONS = [
     items: [
       ["Story Bible", "/story-bible"],
       ["Canon & Continuity", "/canon"],
+    ],
+  },
+  {
+    label: "Distribution",
+    items: [
+      ["YouTube", "/youtube"],
     ],
   },
 ] as const;
