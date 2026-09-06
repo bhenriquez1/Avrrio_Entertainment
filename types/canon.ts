@@ -8,7 +8,12 @@ export type CanonType =
   | "artifact"
   | "historical_event"
   | "rule"
-  | "world_detail";
+  | "world_detail"
+  | "secret"
+  | "foreshadowing"
+  | "canon_decision"
+  | "idea"
+  | "season_episode";
 
 export type CanonStatus = "proposed" | "approved" | "rejected" | "superseded";
 
@@ -25,6 +30,11 @@ export const CANON_TYPE_LABELS: Record<CanonType, string> = {
   historical_event: "Historical Event",
   rule: "Rule",
   world_detail: "World Detail",
+  secret: "Secret",
+  foreshadowing: "Foreshadowing",
+  canon_decision: "Canon Decision",
+  idea: "Idea",
+  season_episode: "Season / Episode",
 };
 
 export const CANON_STATUS_LABELS: Record<CanonStatus, string> = {

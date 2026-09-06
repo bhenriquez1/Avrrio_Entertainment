@@ -291,6 +291,9 @@ export default function CanonPage({ params }: { params: Promise<{ id: string }> 
                 <option value="world_detail">World Details</option>
                 <option value="secret">Secrets</option>
                 <option value="foreshadowing">Foreshadowing</option>
+                <option value="canon_decision">Canon Decisions</option>
+                <option value="idea">Ideas</option>
+                <option value="season_episode">Season / Episode</option>
               </select>
             </div>
           )}
