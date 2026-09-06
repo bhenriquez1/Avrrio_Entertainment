@@ -366,9 +366,11 @@ export default function CreativeRoomPage({ params }: { params: Promise<{ id: str
     setIsListening(true);
   }
 
-  const filteredThreads = threads.filter((t) =>
-    !threadSearch || t.title.toLowerCase().includes(threadSearch.toLowerCase())
-  );
+  const filteredThreads = threads.filter((t) => {
+    if (!threadSearch) return true;
+    const q = threadSearch.toLowerCase();
+    return t.title.toLowerCase().includes(q) || t.workingOn.toLowerCase().includes(q);
+  });
 
   return (
     <div className="flex h-full min-h-0 bg-zinc-950">

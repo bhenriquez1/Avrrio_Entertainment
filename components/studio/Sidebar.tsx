@@ -1,6 +1,10 @@
 "use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/lib/firebase/AuthProvider";
+import { getProduction } from "@/lib/production/repository";
 
 const SECTIONS = [
   {
@@ -50,15 +54,27 @@ const SECTIONS = [
   },
 ] as const;
 
-export function Sidebar({ productionId, productionTitle }: { productionId: string; productionTitle: string }) {
+export function Sidebar({ productionId }: { productionId: string; productionTitle?: string }) {
   const pathname = usePathname();
+  const { uid, status } = useAuth();
+  const [title, setTitle] = useState<string | null>(null);
   const base = `/production/${productionId}`;
+
+  useEffect(() => {
+    if (status !== "allowed" || !uid) return;
+    getProduction(uid, productionId).then((prod) => {
+      if (prod?.title) setTitle(prod.title);
+    }).catch(() => {});
+  }, [uid, productionId, status]);
+
   return (
     <aside className="avrrio-sidebar flex w-56 flex-shrink-0 flex-col border-r border-blue-200/10 bg-[#070b18]">
       <div className="border-b border-blue-200/10 px-4 py-4">
         <Link href={base}>
           <p className="text-[9px] font-semibold uppercase tracking-[0.28em] text-amber-300/70">Active Production</p>
-          <p className="mt-1 truncate text-sm font-semibold text-slate-50">{productionTitle}</p>
+          <p className="mt-1 truncate text-sm font-semibold text-slate-50">
+            {title ?? <span className="opacity-30">Loading…</span>}
+          </p>
           <p className="mt-1 text-[10px] text-blue-200/35">Story Memory connected</p>
         </Link>
       </div>

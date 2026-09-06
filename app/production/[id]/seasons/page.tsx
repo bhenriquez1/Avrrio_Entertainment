@@ -3,8 +3,7 @@
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/firebase/AuthProvider";
-import { listCanon } from "@/lib/production/repository";
-import { listSeasons, saveSeason } from "@/lib/production/repository";
+import { getProduction, listCanon, listSeasons, saveSeason } from "@/lib/production/repository";
 import type { Season } from "@/types/episode";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -28,6 +27,7 @@ export default function SeasonsPage({ params }: { params: Promise<{ id: string }
   const { id: productionId } = use(params);
   const { uid, status, getIdToken } = useAuth();
   const [seasons, setSeasons] = useState<Season[]>([]);
+  const [productionTitle, setProductionTitle] = useState("Untitled Production");
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -45,7 +45,12 @@ export default function SeasonsPage({ params }: { params: Promise<{ id: string }
 
   const load = useCallback(async () => {
     if (status !== "allowed") return;
-    setSeasons((await listSeasons(uid, productionId)).sort((a, b) => a.number - b.number));
+    const [seasonList, prod] = await Promise.all([
+      listSeasons(uid, productionId),
+      getProduction(uid, productionId),
+    ]);
+    setSeasons(seasonList.sort((a, b) => a.number - b.number));
+    if (prod?.title) setProductionTitle(prod.title);
     setLoading(false);
   }, [uid, productionId, status]);
 
@@ -91,7 +96,7 @@ export default function SeasonsPage({ params }: { params: Promise<{ id: string }
           ...(token ? { authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          productionTitle: "Avrrio",
+          productionTitle: productionTitle,
           logline: genLogline.trim(),
           approvedCanon,
           targetSeasons: Number(genSeasons) || 1,
