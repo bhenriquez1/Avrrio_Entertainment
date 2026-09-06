@@ -55,6 +55,13 @@ export default function CanonPage({ params }: { params: Promise<{ id: string }> 
     setActionLoading(false);
   };
 
+  const handleEditStatement = async (recordId: string, statement: string) => {
+    const record = canon.find((c) => c.id === recordId);
+    if (!record) return;
+    const updated = await saveCanonRecord(uid, productionId, { ...record, statement });
+    setCanon((prev) => prev.map((c) => c.id === recordId ? updated : c));
+  };
+
   const handleImport = async () => {
     if (!docText.trim()) return;
     setImporting(true);
@@ -130,8 +137,18 @@ export default function CanonPage({ params }: { params: Promise<{ id: string }> 
     }
   };
 
+  const [canonSearch, setCanonSearch] = useState("");
+  const [canonTypeFilter, setCanonTypeFilter] = useState("all");
+
   const approved = canon.filter((c) => c.status === "approved");
   const pending = canon.filter((c) => c.status === "proposed");
+
+  const filteredApproved = approved.filter((c) => {
+    if (canonTypeFilter !== "all" && c.type !== canonTypeFilter) return false;
+    if (!canonSearch) return true;
+    const q = canonSearch.toLowerCase();
+    return c.title.toLowerCase().includes(q) || c.statement.toLowerCase().includes(q);
+  });
 
   return (
     <main className="p-8 max-w-3xl">
@@ -248,11 +265,45 @@ export default function CanonPage({ params }: { params: Promise<{ id: string }> 
 
       {tab === "approved" && (
         <div className="space-y-3">
+          {approved.length > 0 && (
+            <div className="flex gap-2 mb-4">
+              <input
+                value={canonSearch}
+                onChange={(e) => setCanonSearch(e.target.value)}
+                placeholder="Search canon…"
+                className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-zinc-600"
+              />
+              <select
+                value={canonTypeFilter}
+                onChange={(e) => setCanonTypeFilter(e.target.value)}
+                className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-300 outline-none focus:border-zinc-600"
+              >
+                <option value="all">All types</option>
+                <option value="character">Characters</option>
+                <option value="relationship">Relationships</option>
+                <option value="location">Locations</option>
+                <option value="organization">Organizations</option>
+                <option value="artifact">Artifacts</option>
+                <option value="species">Species</option>
+                <option value="historical_event">Historical Events</option>
+                <option value="rule">Rules</option>
+                <option value="magic_system">Magic Systems</option>
+                <option value="world_detail">World Details</option>
+                <option value="secret">Secrets</option>
+                <option value="foreshadowing">Foreshadowing</option>
+                <option value="canon_decision">Canon Decisions</option>
+                <option value="idea">Ideas</option>
+                <option value="season_episode">Season / Episode</option>
+              </select>
+            </div>
+          )}
           {approved.length === 0 ? (
             <p className="text-sm text-zinc-500">No approved canon yet.</p>
+          ) : filteredApproved.length === 0 ? (
+            <p className="text-sm text-zinc-500">No records match your search.</p>
           ) : (
-            approved.map((record) => (
-              <CanonCard key={record.id} record={record} />
+            filteredApproved.map((record) => (
+              <CanonCard key={record.id} record={record} onEdit={handleEditStatement} />
             ))
           )}
         </div>
