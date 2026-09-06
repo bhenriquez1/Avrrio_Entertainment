@@ -55,6 +55,13 @@ export default function CanonPage({ params }: { params: Promise<{ id: string }> 
     setActionLoading(false);
   };
 
+  const handleEditStatement = async (recordId: string, statement: string) => {
+    const record = canon.find((c) => c.id === recordId);
+    if (!record) return;
+    const updated = await saveCanonRecord(uid, productionId, { ...record, statement });
+    setCanon((prev) => prev.map((c) => c.id === recordId ? updated : c));
+  };
+
   const handleImport = async () => {
     if (!docText.trim()) return;
     setImporting(true);
@@ -293,7 +300,7 @@ export default function CanonPage({ params }: { params: Promise<{ id: string }> 
             <p className="text-sm text-zinc-500">No records match your search.</p>
           ) : (
             filteredApproved.map((record) => (
-              <CanonCard key={record.id} record={record} />
+              <CanonCard key={record.id} record={record} onEdit={handleEditStatement} />
             ))
           )}
         </div>
