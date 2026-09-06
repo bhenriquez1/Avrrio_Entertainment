@@ -95,7 +95,7 @@ export default function EpisodesPage({ params }: { params: Promise<{ id: string 
             {currentSeason ? `Season ${currentSeason.number}: ${currentSeason.title}` : "Episodes"}
           </h1>
           <p className="mt-1 text-sm text-zinc-400">
-            {episodes.length} episode{episodes.length !== 1 ? "s" : ""} · {currentSeason?.targetRuntimeMinutes ?? currentSeason?.episodeCount ?? ""} {currentSeason?.episodeCount ? `planned` : ""}
+            {episodes.length} episode{episodes.length !== 1 ? "s" : ""}{currentSeason?.episodeCount ? ` · ${currentSeason.episodeCount} planned` : ""}
           </p>
         </div>
         <div className="flex items-center gap-2">
