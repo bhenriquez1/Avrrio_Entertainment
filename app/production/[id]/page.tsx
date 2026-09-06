@@ -55,21 +55,35 @@ export default function ProductionOverviewPage({ params }: { params: Promise<{ i
     <main className="p-8 max-w-3xl">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500">Production #001</p>
-          <h1 className="mt-1 text-2xl font-bold text-zinc-50">{production.title}</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="rounded-full border border-zinc-700 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+              {STATUS_LABELS[production.status] ?? production.status}
+            </span>
+            {production.genre.map((g) => (
+              <span key={g} className="rounded-full bg-zinc-800 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-zinc-400">
+                {g}
+              </span>
+            ))}
+          </div>
+          <h1 className="mt-2 text-2xl font-bold text-zinc-50">{production.title}</h1>
           {production.logline && <p className="mt-1 text-sm text-zinc-400">{production.logline}</p>}
         </div>
-        <span className="rounded-full border border-zinc-700 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-zinc-400">
-          {STATUS_LABELS[production.status] ?? production.status}
-        </span>
       </div>
 
       <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
           { label: "Canon", value: `${approvedCanon.length} approved`, sub: `${pendingCanon.length} pending` },
           { label: "Characters", value: `${characters.length} locked`, sub: "approved" },
-          { label: "Season 1", value: seasons.length > 0 ? seasons[0].status.replace(/-/g, " ") : "Not started", sub: `${seasons.length} season(s)` },
-          { label: "Canon v", value: production.canonVersion, sub: "current version" },
+          {
+            label: "Seasons",
+            value: `${seasons.length} / ${production.targetSeasons}`,
+            sub: `${production.targetEpisodesPerSeason} ep target`,
+          },
+          {
+            label: "Runtime",
+            value: `${production.targetRuntimeMinutes} min`,
+            sub: "target per episode",
+          },
         ].map((stat) => (
           <div key={stat.label} className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{stat.label}</p>
