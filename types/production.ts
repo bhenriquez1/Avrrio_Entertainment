@@ -68,6 +68,11 @@ export interface StoryScene {
   productionJobId: string | null;
   createdAt: string;
   updatedAt: string;
+  seasonId?: string;
+  episodeId?: string;
+  sceneNumber?: number;
+  act?: string;
+  storyBeat?: string;
 }
 
 export type ReviewStatus = "draft" | "review" | "approved";
@@ -86,6 +91,23 @@ export interface ProductionShot {
 export interface ReferenceAsset {
   id: string; productionId: string; name: string; kind: "character" | "location" | "prop" | "style";
   dataUrl: string; mimeType: string; notes: string; status: ReviewStatus; createdAt: string; updatedAt: string;
+  characterId?: string | null;
+  characterName?: string;
+  section?: "concept-art" | "approved-reference" | "expressions" | "wardrobe" | "age-reference" | "power-visual-language" | "voice" | "production-assets";
+  visualStatus?: "reference" | "proposed" | "approved" | "canon-visual";
+  providerReady?: boolean;
+}
+
+export interface StoryLocation {
+  id: string; productionId: string; name: string; description: string; geography: string;
+  timePeriod: string; visualLanguage: string; lighting: string; soundscape: string;
+  status: ReviewStatus; linkedCanonIds: string[]; createdAt: string; updatedAt: string;
+}
+
+export interface TimelineEvent {
+  id: string; productionId: string; title: string; order: number; era: string; dateLabel: string;
+  description: string; seasonId: string | null; episodeId: string | null; sceneId: string | null;
+  status: ReviewStatus; linkedCanonIds: string[]; createdAt: string; updatedAt: string;
 }
 
 export interface QualityReview {

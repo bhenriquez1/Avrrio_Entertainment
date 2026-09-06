@@ -12,14 +12,15 @@ import Link from "next/link";
 const STATUSES: AssetStatus[] = ["concept", "in-development", "approved", "final"];
 
 const IDENT_STORYBOARD = [
-  { label: "Black", icon: "◼", note: "Complete darkness. Silence." },
-  { label: "Point of light", icon: "·", note: "A single tiny point appears." },
-  { label: "Field of fragments", icon: "⁺⁺·", note: "Camera reveals an enormous particle field — unfinished stories." },
-  { label: "Fragments become", icon: "◻ ◎ ▣", note: "Briefly: a page, an eye, a city, a character silhouette, a film frame." },
-  { label: "Acceleration", icon: "→→→", note: "All fragments accelerate toward one point." },
-  { label: "Assembly", icon: "⬡", note: "They assemble into the Avrrio symbol." },
-  { label: "AVRRIO ENTERTAINMENT", icon: "Aa", note: "Wordmark holds. Sonic signature resolves." },
-  { label: "Fade to black", icon: "◼", note: "Episode begins." },
+  { label: "Midnight", icon: "◼", note: "Complete darkness. Deep midnight blue emerges." },
+  { label: "Materialize", icon: "·⁺·", note: "Gold, pearl, and blue-white particles appear scattered across the frame." },
+  { label: "Orbit forms", icon: "◎", note: "Particles sweep into layered circular orbits — three rings at different radii and speeds." },
+  { label: "Gravity catches", icon: "⬡→", note: "The scattered particles accelerate into Avrrio's asymmetrical elliptical path." },
+  { label: "Dimensional orbit", icon: "◎", note: "One living-gold trail sweeps behind and then in front of the wordmark." },
+  { label: "Pearl AVRRIO", icon: "Aa", note: "AVRRIO resolves in luminous pearl/silver; ENTERTAINMENT settles beneath it." },
+  { label: "Signature spark", icon: "✦", note: "The traveling point emerges toward camera, suspends, and pulses once on the final note." },
+  { label: "Recognition hold", icon: "—", note: "The gold orbit, silver wordmark, and single spark hold quietly for recognition." },
+  { label: "Fade to midnight", icon: "◼", note: "Episode begins." },
 ];
 
 export default function StudioBrandPage() {
@@ -150,7 +151,7 @@ export default function StudioBrandPage() {
         {playing ? (
           <IdentAnimation onComplete={() => { setPlaying(false); setPlayed(true); }} />
         ) : (
-          <div className="flex aspect-video w-full items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950">
+          <div className="flex aspect-video w-full items-center justify-center rounded-lg border border-zinc-800" style={{ background: "#070b18" }}>
             <p className="text-xs text-zinc-600">{played ? "Preview complete — click Replay to watch again." : "Click Preview Ident to see the concept animation."}</p>
           </div>
         )}
@@ -174,7 +175,7 @@ export default function StudioBrandPage() {
           ))}
         </div>
         <p className="mt-2 text-xs text-zinc-600">
-          Duration target: 8–12 seconds. Symbolism: imagination becoming reality — scattered ideas → story → image → Avrrio.
+          Canonical master ending: midnight-blue world, pearl/silver AVRRIO, living-gold dimensional orbit, and one restrained signature spark. Future character variants may interrupt this expected finish.
         </p>
       </section>
 
@@ -245,7 +246,7 @@ export default function StudioBrandPage() {
             </div>
           </div>
           <p className="mt-2 text-xs text-zinc-600">
-            Variants share the same underlying motif — tempo and timbre adapt, but the recognizable signature holds across Standard, Dark, Holiday, and Castillo idents.
+            Variants share the same underlying motif — tempo and timbre adapt, but the recognizable signature holds across Standard, Dark, Holiday, and Series idents.
           </p>
         </section>
       )}

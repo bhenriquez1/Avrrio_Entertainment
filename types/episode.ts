@@ -11,6 +11,9 @@ export interface Season {
   episodeCount: number;
   createdAt: string;
   updatedAt: string;
+  theme?: string;
+  arc?: string;
+  storyBeats?: string[];
 }
 
 export interface Episode {
@@ -26,4 +29,9 @@ export interface Episode {
   acts: string[];
   createdAt: string;
   updatedAt: string;
+  logline?: string;
+  coldOpen?: string;
+  climax?: string;
+  resolution?: string;
+  storyBeats?: string[];
 }
