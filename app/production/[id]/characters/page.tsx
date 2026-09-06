@@ -6,6 +6,8 @@ import { useAuth } from "@/lib/firebase/AuthProvider";
 import { listCanon, saveCanonRecord } from "@/lib/production/repository";
 import type { CanonRecord } from "@/types/canon";
 
+const EMPTY_CHAR_FORM = { name: "", age: "", role: "", statement: "" };
+
 const CASTILLO_STUBS: Array<{ name: string; statement: string }> = [
   { name: "Samantha", statement: "Samantha is a principal character in Castillo. Age: 16. Additional details to be developed and approved." },
   { name: "Arianna", statement: "Arianna is a principal character in Castillo. Age: 16. Additional details to be developed and approved." },
@@ -47,6 +49,9 @@ export default function CharactersPage({ params }: { params: Promise<{ id: strin
   const [characters, setCharacters] = useState<CanonRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [charForm, setCharForm] = useState(EMPTY_CHAR_FORM);
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     if (status !== "allowed") return;
@@ -82,6 +87,35 @@ export default function CharactersPage({ params }: { params: Promise<{ id: strin
     setSeeding(false);
   }
 
+  async function createCharacter(e: React.FormEvent) {
+    e.preventDefault();
+    if (!charForm.name.trim()) return;
+    setSaving(true);
+    const agePart = charForm.age.trim() ? ` Age: ${charForm.age.trim()}.` : "";
+    const rolePart = charForm.role.trim() ? ` Role: ${charForm.role.trim()}.` : "";
+    const extra = charForm.statement.trim() ? ` ${charForm.statement.trim()}` : "";
+    const statement = `${charForm.name.trim()} is a character in this production.${agePart}${rolePart}${extra}`;
+    await saveCanonRecord(uid, productionId, {
+      productionId,
+      type: "character",
+      title: charForm.name.trim(),
+      statement,
+      status: "proposed",
+      source: "Characters page",
+      proposedBy: "user",
+      approvedBy: null,
+      canonVersion: "1.0",
+      supersedes: null,
+      dependencies: [],
+      reviewNote: "",
+      contradictions: [],
+    });
+    setCharForm(EMPTY_CHAR_FORM);
+    setShowForm(false);
+    await load();
+    setSaving(false);
+  }
+
   const approved = characters.filter((c) => c.status === "approved");
   const proposed = characters.filter((c) => c.status === "proposed");
   const needsSeed = CASTILLO_STUBS.some((s) => !characters.find((c) => c.title.toLowerCase() === s.name.toLowerCase()));
@@ -98,16 +132,86 @@ export default function CharactersPage({ params }: { params: Promise<{ id: strin
             {approved.length} approved · {proposed.length} proposed
           </p>
         </div>
-        {needsSeed && (
+        <div className="flex gap-2">
+          {needsSeed && (
+            <button
+              onClick={() => void seedCastilloCharacters()}
+              disabled={seeding}
+              className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 disabled:opacity-40 transition-colors"
+            >
+              {seeding ? "Seeding…" : "Seed Castillo Characters"}
+            </button>
+          )}
           <button
-            onClick={() => void seedCastilloCharacters()}
-            disabled={seeding}
-            className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 disabled:opacity-40 transition-colors"
+            onClick={() => setShowForm((v) => !v)}
+            className="rounded-lg bg-amber-300 px-4 py-2 text-xs font-bold text-zinc-950 hover:bg-amber-200 transition-colors"
           >
-            {seeding ? "Seeding…" : "Seed Castillo Characters"}
+            {showForm ? "Cancel" : "+ New Character"}
           </button>
-        )}
+        </div>
       </div>
+
+      {showForm && (
+        <form onSubmit={(e) => void createCharacter(e)} className="mb-6 rounded-xl border border-zinc-700 bg-zinc-900 p-5 space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-1">New Character (proposed)</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500 mb-1">Name *</label>
+              <input
+                required
+                value={charForm.name}
+                onChange={(e) => setCharForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="Samantha"
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400/50 placeholder:text-zinc-600"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500 mb-1">Age</label>
+              <input
+                value={charForm.age}
+                onChange={(e) => setCharForm((f) => ({ ...f, age: e.target.value }))}
+                placeholder="16"
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400/50 placeholder:text-zinc-600"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500 mb-1">Role / Title</label>
+            <input
+              value={charForm.role}
+              onChange={(e) => setCharForm((f) => ({ ...f, role: e.target.value }))}
+              placeholder="Protagonist, best friend…"
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400/50 placeholder:text-zinc-600"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500 mb-1">Notes</label>
+            <textarea
+              rows={2}
+              value={charForm.statement}
+              onChange={(e) => setCharForm((f) => ({ ...f, statement: e.target.value }))}
+              placeholder="Brief description, key traits…"
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400/50 placeholder:text-zinc-600 resize-none"
+            />
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button
+              type="submit"
+              disabled={saving || !charForm.name.trim()}
+              className="rounded-lg bg-amber-300 px-5 py-2 text-xs font-bold text-zinc-950 hover:bg-amber-200 disabled:opacity-40 transition-colors"
+            >
+              {saving ? "Saving…" : "Propose Character"}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowForm(false); setCharForm(EMPTY_CHAR_FORM); }}
+              className="rounded-lg border border-zinc-700 px-4 py-2 text-xs font-semibold text-zinc-400 hover:bg-zinc-800 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
 
       {characters.length === 0 ? (
         <div className="rounded-xl border border-dashed border-zinc-800 p-10 text-center">
