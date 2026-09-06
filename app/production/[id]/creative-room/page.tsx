@@ -85,6 +85,8 @@ export default function CreativeRoomPage({ params }: { params: Promise<{ id: str
   const [editValue, setEditValue] = useState("");
 
   const bottomRef = useRef<HTMLDivElement>(null);
+  const recognizerRef = useRef<{ stop: () => void } | null>(null);
+  const [isListening, setIsListening] = useState(false);
 
   const approvedCanon = useMemo(() => canon.filter((c) => c.status === "approved"), [canon]);
 
@@ -324,6 +326,44 @@ export default function CreativeRoomPage({ params }: { params: Promise<{ id: str
   async function discardProposal(proposal: StoryDecisionProposal) {
     setProposals((prev) => prev.filter((p) => p.title !== proposal.title));
     if (proposals.length <= 1) setShowReview(false);
+  }
+
+  function toggleVoice() {
+    if (isListening) {
+      recognizerRef.current?.stop();
+      recognizerRef.current = null;
+      setIsListening(false);
+      return;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SpeechRecognition = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setError("Voice input is not supported in this browser.");
+      return;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    const recognition = new SpeechRecognition() as {
+      continuous: boolean;
+      interimResults: boolean;
+      lang: string;
+      start: () => void;
+      stop: () => void;
+      onresult: (e: { results: ArrayLike<{ transcript: string }[]> & { length: number } }) => void;
+      onend: () => void;
+      onerror: () => void;
+    };
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+    recognition.onresult = (e) => {
+      const transcript = Array.from({ length: e.results.length }, (_, i) => e.results[i][0].transcript).join(" ");
+      setDraft((prev) => (prev ? prev + " " + transcript : transcript));
+    };
+    recognition.onend = () => { recognizerRef.current = null; setIsListening(false); };
+    recognition.onerror = () => { recognizerRef.current = null; setIsListening(false); };
+    recognition.start();
+    recognizerRef.current = recognition;
+    setIsListening(true);
   }
 
   const filteredThreads = threads.filter((t) =>
@@ -607,6 +647,18 @@ export default function CreativeRoomPage({ params }: { params: Promise<{ id: str
               placeholder={`Talk about the story${activeThread?.workingOn && activeThread.workingOn !== "General" ? ` — ${activeThread.workingOn}` : ""}…`}
               className="min-h-12 flex-1 resize-none bg-transparent text-sm text-zinc-100 outline-none placeholder:text-zinc-600"
             />
+            <button
+              type="button"
+              onClick={toggleVoice}
+              title={isListening ? "Stop recording" : "Speak your message"}
+              className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                isListening
+                  ? "border-red-500/40 bg-red-500/10 text-red-400 animate-pulse"
+                  : "border-zinc-700 text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              🎙
+            </button>
             <button
               disabled={!draft.trim() || sending}
               onClick={() => void sendMessage()}
