@@ -4,9 +4,9 @@ import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/lib/firebase/AuthProvider";
-import { listCanon, listReferenceAssets, saveReferenceAsset } from "@/lib/production/repository";
+import { listCanon, listCharacterVoices, listReferenceAssets, saveReferenceAsset } from "@/lib/production/repository";
 import type { CanonRecord } from "@/types/canon";
-import type { ReferenceAsset } from "@/types/production";
+import type { CharacterVoice, ReferenceAsset } from "@/types/production";
 
 const TABS = [
   { id: "profile", label: "Profile" },
@@ -93,19 +93,24 @@ export default function CharacterDetailPage({ params }: { params: Promise<{ id: 
   const [character, setCharacter] = useState<CanonRecord | null>(null);
   const [allCanon, setAllCanon] = useState<CanonRecord[]>([]);
   const [assets, setAssets] = useState<ReferenceAsset[]>([]);
+  const [voices, setVoices] = useState<CharacterVoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabId>("profile");
 
   const load = useCallback(async () => {
     if (status !== "allowed") return;
-    const [canon, visualAssets] = await Promise.all([
+    const [canon, visualAssets, allVoices] = await Promise.all([
       listCanon(uid, productionId),
       listReferenceAssets(uid, productionId),
+      listCharacterVoices(uid, productionId),
     ]);
     const char = canon.find((r) => r.id === charId && r.type === "character") ?? null;
     setCharacter(char);
     setAllCanon(canon);
     setAssets(visualAssets.filter((a) => a.characterId === charId));
+    if (char) {
+      setVoices(allVoices.filter((v) => v.characterName.toLowerCase() === char.title.toLowerCase()));
+    }
     setLoading(false);
   }, [uid, productionId, charId, status]);
 
@@ -332,8 +337,45 @@ export default function CharacterDetailPage({ params }: { params: Promise<{ id: 
         )}
 
         {tab === "voice" && (
-          <div className="max-w-2xl">
-            <EmptyTab charName={charName} productionId={productionId} hint="Voice notes and ElevenLabs integration coming soon." />
+          <div className="max-w-2xl space-y-4">
+            {voices.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-zinc-800 p-8 text-center">
+                <p className="text-sm text-zinc-500">No voices registered for {charName} yet.</p>
+                <Link
+                  href={`/production/${productionId}/voices`}
+                  className="mt-3 inline-block text-xs text-amber-400 hover:text-amber-300"
+                >
+                  Register a voice in the Voice Registry →
+                </Link>
+              </div>
+            ) : (
+              <>
+                {voices.map((voice) => (
+                  <div key={voice.id} className="rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-xs font-mono text-zinc-500">{voice.voiceId} · v{voice.voiceVersion}</p>
+                        <p className="mt-0.5 text-sm text-zinc-300">{voice.emotionalDirection || "No emotional direction set"}</p>
+                      </div>
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${
+                        voice.status === "approved" ? "border-emerald-900/40 text-emerald-400" :
+                        voice.status === "retired" ? "border-zinc-800 text-zinc-600" :
+                        "border-amber-900/40 text-amber-400"
+                      }`}>
+                        {voice.status}
+                      </span>
+                    </div>
+                    {voice.notes && <p className="mt-1.5 text-xs text-zinc-600 italic">{voice.notes}</p>}
+                  </div>
+                ))}
+                <Link
+                  href={`/production/${productionId}/voices`}
+                  className="block text-xs text-zinc-600 hover:text-zinc-400"
+                >
+                  Manage in Voice Registry →
+                </Link>
+              </>
+            )}
           </div>
         )}
 
