@@ -2,7 +2,7 @@ import { listItems, getItem, saveItem, deleteItem } from "./storage";
 import type { CharacterVoice, Production, ProductionQueueJob, ProductionScript, ProductionShot, QualityReview, ReferenceAsset, StoryScene } from "@/types/production";
 import type { CanonRecord } from "@/types/canon";
 import type { Season, Episode } from "@/types/episode";
-import type { CreativeMessage } from "@/types/ai";
+import type { CreativeMessage, ConversationThread } from "@/types/ai";
 
 function nowIso() { return new Date().toISOString(); }
 function newId() {
@@ -97,6 +97,52 @@ export async function saveCreativeMessage(
     createdAt: data.createdAt ?? nowIso(),
   };
   await saveItem(uid, `creative-room-${productionId}`, message);
+  return message;
+}
+
+// Conversation Threads
+export async function listConversationThreads(uid: string, productionId: string): Promise<ConversationThread[]> {
+  return listItems<ConversationThread>(uid, `threads-${productionId}`);
+}
+
+export async function saveConversationThread(
+  uid: string,
+  productionId: string,
+  data: Omit<ConversationThread, "id" | "productionId" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: string }
+): Promise<ConversationThread> {
+  const now = nowIso();
+  const thread: ConversationThread = {
+    ...data,
+    id: data.id ?? newId(),
+    productionId,
+    createdAt: data.createdAt ?? now,
+    updatedAt: now,
+  };
+  await saveItem(uid, `threads-${productionId}`, thread);
+  return thread;
+}
+
+export async function deleteConversationThread(uid: string, productionId: string, id: string): Promise<void> {
+  return deleteItem(uid, `threads-${productionId}`, id);
+}
+
+export async function listThreadMessages(uid: string, productionId: string, threadId: string): Promise<CreativeMessage[]> {
+  return listItems<CreativeMessage>(uid, `thread-msgs-${productionId}-${threadId}`);
+}
+
+export async function saveThreadMessage(
+  uid: string,
+  productionId: string,
+  threadId: string,
+  data: Omit<CreativeMessage, "id" | "productionId" | "createdAt"> & { id?: string; createdAt?: string }
+): Promise<CreativeMessage> {
+  const message: CreativeMessage = {
+    ...data,
+    id: data.id ?? newId(),
+    productionId,
+    createdAt: data.createdAt ?? nowIso(),
+  };
+  await saveItem(uid, `thread-msgs-${productionId}-${threadId}`, message);
   return message;
 }
 

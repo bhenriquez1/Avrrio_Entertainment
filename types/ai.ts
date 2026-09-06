@@ -51,3 +51,27 @@ export interface CreativeRoomResponse {
   responses: Array<{ role: "openai" | "claude" | "synthesis"; content: string }>;
   continuityNotes: string[];
 }
+
+export interface ConversationThread {
+  id: string;
+  productionId: string;
+  title: string;
+  workingOn: string;
+  lastMessageAt: string;
+  archived: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StoryDecisionProposal {
+  type: string;
+  title: string;
+  statement: string;
+  confidence: "high" | "medium" | "low";
+  sourceExcerpt: string;
+}
+
+export interface DetectDecisionsResult {
+  proposals: StoryDecisionProposal[];
+  count: number;
+}
