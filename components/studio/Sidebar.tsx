@@ -17,6 +17,7 @@ const SECTIONS = [
     items: [
       ["Seasons", "/seasons"],
       ["Episodes", "/episodes"],
+      ["Timeline", "/timeline"],
       ["Scripts", "/scripts"],
       ["Scenes", "/scenes"],
       ["Shots", "/shots"],
