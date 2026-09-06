@@ -189,6 +189,8 @@ function OverviewTab({ canon, productionId }: { canon: CanonRecord[]; production
 }
 
 function RecordList({ records, productionId, emptyLabel }: { records: CanonRecord[]; productionId: string; emptyLabel: string }) {
+  const [search, setSearch] = useState("");
+
   if (records.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-zinc-800 p-8 text-center">
@@ -203,17 +205,37 @@ function RecordList({ records, productionId, emptyLabel }: { records: CanonRecor
       </div>
     );
   }
+
+  const filtered = search
+    ? records.filter((r) => {
+        const q = search.toLowerCase();
+        return r.title.toLowerCase().includes(q) || r.statement.toLowerCase().includes(q);
+      })
+    : records;
+
   return (
-    <div className="space-y-2">
-      {records.map((record) => (
-        <div key={record.id} className="rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3">
-          <p className="text-sm font-semibold text-zinc-100">{record.title}</p>
-          <p className="mt-0.5 text-sm text-zinc-400 leading-5">{record.statement}</p>
-          {record.reviewNote && (
-            <p className="mt-1 text-xs text-zinc-600 italic">{record.reviewNote}</p>
-          )}
-        </div>
-      ))}
+    <div className="space-y-3">
+      {records.length > 4 && (
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={`Search ${emptyLabel.toLowerCase()}…`}
+          className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-zinc-600"
+        />
+      )}
+      {filtered.length === 0 ? (
+        <p className="text-sm text-zinc-500">No records match your search.</p>
+      ) : (
+        filtered.map((record) => (
+          <div key={record.id} className="rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3">
+            <p className="text-sm font-semibold text-zinc-100">{record.title}</p>
+            <p className="mt-0.5 text-sm text-zinc-400 leading-5">{record.statement}</p>
+            {record.reviewNote && (
+              <p className="mt-1 text-xs text-zinc-600 italic">{record.reviewNote}</p>
+            )}
+          </div>
+        ))
+      )}
     </div>
   );
 }

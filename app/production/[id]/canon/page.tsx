@@ -16,6 +16,7 @@ export default function CanonPage({ params }: { params: Promise<{ id: string }> 
   const [tab, setTab] = useState<Tab>("pending");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   // Import flow state
   const [docText, setDocText] = useState("");
@@ -60,6 +61,30 @@ export default function CanonPage({ params }: { params: Promise<{ id: string }> 
     if (!record) return;
     const updated = await saveCanonRecord(uid, productionId, { ...record, statement });
     setCanon((prev) => prev.map((c) => c.id === recordId ? updated : c));
+  };
+
+  const handleBulkApprove = async () => {
+    if (selected.size === 0) return;
+    setActionLoading(true);
+    const toApprove = canon.filter((c) => selected.has(c.id));
+    for (const record of toApprove) {
+      await saveCanonRecord(uid, productionId, { ...record, status: "approved", approvedBy: uid });
+    }
+    setSelected(new Set());
+    await load();
+    setActionLoading(false);
+  };
+
+  const handleBulkReject = async () => {
+    if (selected.size === 0) return;
+    setActionLoading(true);
+    const toReject = canon.filter((c) => selected.has(c.id));
+    for (const record of toReject) {
+      await saveCanonRecord(uid, productionId, { ...record, status: "rejected" });
+    }
+    setSelected(new Set());
+    await load();
+    setActionLoading(false);
   };
 
   const handleImport = async () => {
@@ -163,7 +188,7 @@ export default function CanonPage({ params }: { params: Promise<{ id: string }> 
         {(["pending", "approved", "import"] as Tab[]).map((t) => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => { setTab(t); setSelected(new Set()); }}
             className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors border-b-2 -mb-px ${
               tab === t ? "border-zinc-100 text-zinc-100" : "border-transparent text-zinc-500 hover:text-zinc-300"
             }`}
@@ -250,15 +275,69 @@ export default function CanonPage({ params }: { params: Promise<{ id: string }> 
               </button>
             </div>
           ) : (
-            pending.map((record) => (
-              <CanonCard
-                key={record.id}
-                record={record}
-                onApprove={handleApprove}
-                onReject={handleReject}
-                loading={actionLoading}
-              />
-            ))
+            <>
+              {pending.length > 1 && (
+                <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/60 px-4 py-2.5">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selected.size === pending.length}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelected(new Set(pending.map((r) => r.id)));
+                        else setSelected(new Set());
+                      }}
+                      className="accent-amber-400"
+                    />
+                    <span className="text-xs text-zinc-400">
+                      {selected.size === 0 ? "Select all" : `${selected.size} selected`}
+                    </span>
+                  </label>
+                  {selected.size > 0 && (
+                    <div className="flex gap-2 ml-auto">
+                      <button
+                        disabled={actionLoading}
+                        onClick={() => void handleBulkApprove()}
+                        className="rounded bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-500 disabled:opacity-40 transition-colors"
+                      >
+                        {actionLoading ? "Working…" : `Approve ${selected.size}`}
+                      </button>
+                      <button
+                        disabled={actionLoading}
+                        onClick={() => void handleBulkReject()}
+                        className="rounded bg-zinc-700 px-3 py-1 text-xs font-medium text-zinc-300 hover:bg-zinc-600 disabled:opacity-40 transition-colors"
+                      >
+                        Reject {selected.size}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+              {pending.map((record) => (
+                <div key={record.id} className="flex items-start gap-3">
+                  {pending.length > 1 && (
+                    <input
+                      type="checkbox"
+                      checked={selected.has(record.id)}
+                      onChange={(e) => {
+                        const next = new Set(selected);
+                        if (e.target.checked) next.add(record.id);
+                        else next.delete(record.id);
+                        setSelected(next);
+                      }}
+                      className="mt-4 accent-amber-400 flex-shrink-0"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <CanonCard
+                      record={record}
+                      onApprove={handleApprove}
+                      onReject={handleReject}
+                      loading={actionLoading}
+                    />
+                  </div>
+                </div>
+              ))}
+            </>
           )}
         </div>
       )}

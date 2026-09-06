@@ -19,10 +19,12 @@ const CONFIG: Record<string, { title: string; description: string; types?: strin
   secrets: {
     title: "Secrets",
     description: "Protected knowledge, reveals, and who knows what at each story point.",
+    types: ["secret"],
   },
   foreshadowing: {
     title: "Foreshadowing",
     description: "Planted clues, visions, promises, and planned narrative payoffs.",
+    types: ["foreshadowing"],
   },
   ideas: {
     title: "Ideas",
@@ -62,13 +64,9 @@ export default function StoryMemoryView({ params }: { params: Promise<{ id: stri
       records.filter((record) => {
         if (config.types && !config.types.includes(record.type)) return false;
         if (config.status && record.status !== config.status) return false;
-        if (view === "secrets")
-          return /secret|hidden|reveal|knows/i.test(`${record.title} ${record.statement}`);
-        if (view === "foreshadowing")
-          return /foreshadow|vision|prophecy|clue|omen|promise/i.test(`${record.title} ${record.statement}`);
         return true;
       }),
-    [config.status, config.types, records, view]
+    [config.status, config.types, records]
   );
 
   return (

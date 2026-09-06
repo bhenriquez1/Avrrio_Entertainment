@@ -42,8 +42,12 @@ const SECTIONS = [
   {
     label: "Memory",
     items: [
-      ["Story Bible", "/story-bible"],
       ["Canon & Continuity", "/canon"],
+      ["Relationships", "/memory/relationships"],
+      ["Powers & Rules", "/memory/powers-rules"],
+      ["Secrets", "/memory/secrets"],
+      ["Foreshadowing", "/memory/foreshadowing"],
+      ["Ideas", "/memory/ideas"],
     ],
   },
   {
