@@ -138,6 +138,26 @@ export default function CreativeRoomPage({ params }: { params: Promise<{ id: str
     setWorkingOn("General");
   }
 
+  async function branchThread() {
+    if (!activeThreadId) return;
+    const sourceThread = threads.find((t) => t.id === activeThreadId);
+    if (!sourceThread) return;
+    const branchThread = await saveConversationThread(uid, productionId, {
+      title: `Branch: ${sourceThread.title}`,
+      workingOn: sourceThread.workingOn,
+      lastMessageAt: new Date().toISOString(),
+      archived: false,
+    });
+    // Copy messages up to current point into the new thread
+    for (const msg of messages) {
+      await saveThreadMessage(uid, productionId, branchThread.id, { ...msg });
+    }
+    setThreads((prev) => [branchThread, ...prev]);
+    setActiveThreadId(branchThread.id);
+    setProposals([]);
+    setShowReview(false);
+  }
+
   async function archiveThread(threadId: string) {
     const thread = threads.find((t) => t.id === threadId);
     if (!thread) return;
@@ -362,6 +382,13 @@ export default function CreativeRoomPage({ params }: { params: Promise<{ id: str
               )}
               {activeThreadId === thread.id && renamingId !== thread.id && (
                 <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden gap-0.5 group-hover:flex">
+                  <button
+                    onClick={() => void branchThread()}
+                    className="rounded p-1 text-zinc-600 hover:text-amber-400"
+                    title="Branch conversation"
+                  >
+                    ⎇
+                  </button>
                   <button
                     onClick={() => { setRenamingId(thread.id); setRenameValue(thread.title); }}
                     className="rounded p-1 text-zinc-600 hover:text-zinc-300"
